@@ -1,0 +1,53 @@
+{
+  "name": "linked-server",
+  "version": "1.0.0",
+  "description": "Proyecto Administrador de Centros de tatuajes",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && node ./dist/index.js",
+    "start-dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/index.js\""
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "author": "Hoyos, A. ; Marcosano, M. ; Ceballos, R.; Fernandez, M.; Tobajas Ramirez, I., Fernandez, J",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "argon2": "^0.40.3",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-validator": "^7.1.0",
+    "inversify": "^6.0.2",
+    "inversify-express-utils": "^6.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.2",
+    "pg": "^8.12.0",
+    "reflect-metadata": "^0.2.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/multer": "^1.4.13",
+    "@types/node": "^20.17.6",
+    "@types/pg": "^8.11.10",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.7",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.6",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^4.5.5",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0"
+  }
+}
