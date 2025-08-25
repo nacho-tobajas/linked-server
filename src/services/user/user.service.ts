@@ -49,6 +49,7 @@ export class UserService implements IUserService {
           realname: user.realname,
           surname: user.surname,
           username: user.username,
+          profile_photo: user.profile_photo,
           birth_date: user.birth_date,
           creationuser: user.creationuser,
           creationtimestamp: user.creationtimestamp,
@@ -77,6 +78,7 @@ export class UserService implements IUserService {
       realname: user.realname,
       surname: user.surname,
       username: user.username,
+      profile_photo: user.profile_photo,
       birth_date: user.birth_date,
       creationuser: user.creationuser,
       creationtimestamp: user.creationtimestamp,
@@ -109,6 +111,7 @@ export class UserService implements IUserService {
       realname: userCreated.realname,
       surname: userCreated.surname,
       username: userCreated.username,
+      profile_photo: userCreated.profile_photo,
       birth_date: userCreated.birth_date,
       creationuser: userCreated.creationuser,
       creationtimestamp: userCreated.creationtimestamp,
@@ -212,6 +215,7 @@ export class UserService implements IUserService {
     userToCreate.realname = newUser.realname;
     userToCreate.surname = newUser.surname;
     userToCreate.username = newUser.username;
+    userToCreate.profile_photo = newUser.profile_photo;
     userToCreate.birth_date = newUser.birth_date;
     userToCreate.delete_date = newUser.delete_date;
     userToCreate.status = newUser.status;
@@ -240,6 +244,10 @@ export class UserService implements IUserService {
           ? userWithChanges.surname
           : oldUser.surname,
       username:
+        userWithChanges.username && userWithChanges.username.trim() !== ''
+          ? userWithChanges.username
+          : oldUser.username,
+      profile_photo:
         userWithChanges.username && userWithChanges.username.trim() !== ''
           ? userWithChanges.username
           : oldUser.username,
