@@ -33,6 +33,9 @@ export class User {
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
 
+  @Column({ name: 'creationuser', type: 'varchar' })
+  public profile_photo: string | undefined;
+
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
   public delete_date: Date | undefined;
 
@@ -72,6 +75,7 @@ export class User {
     realname?: string,
     surname?: string,
     username?: string,
+    profile_photo?: string,
     birth_date?: Date,
     delete_date?: Date,
     creationuser?: string,
@@ -84,6 +88,7 @@ export class User {
     this.realname = realname;
     this.surname = surname;
     this.username = username;
+    this.profile_photo = profile_photo;
     this.birth_date = birth_date;
     this.delete_date = delete_date;
     this.creationuser = creationuser;
