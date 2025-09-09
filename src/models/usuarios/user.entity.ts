@@ -15,6 +15,7 @@ import {
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
 import { RolApl } from '../roles/rol-apl.entity.js';
+import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
 
 @Entity('swe_usrapl') // El nombre de la tabla en la base de datos
 export class User {
@@ -33,8 +34,11 @@ export class User {
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
 
+  @Column({ name: 'especialidad', type: 'varchar', nullable: true })
+  public especialidad: string | undefined;
+
   @Column({ name: 'creationuser', type: 'varchar' })
-  public profile_photo: string | undefined;
+  public profile_photo: string | undefined;;
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
   public delete_date: Date | undefined;
@@ -55,10 +59,10 @@ export class User {
   @Column({ name: 'status', type: 'boolean' })
   public status: boolean | undefined;
 
+
+  // Relaciones
   public currentRol?: RolApl;
-
   public currentRolId?: number;
-
   public currentRolDescription?: string;
 
   @OneToOne(() => UserAuth, (userauth) => userauth.user, {
@@ -70,13 +74,21 @@ export class User {
   @OneToMany(() => UserRolApl, (userRolApl) => userRolApl.user, { lazy: true })
   public userRolApl?: Promise<UserRolApl[]>;
 
+  // Relación con Turnos (puede ser cliente o tatuador)
+  @OneToMany(() => TurnoSesion, (turno) => turno.cliente)
+  public turnosCliente?: TurnoSesion[];
+
+  @OneToMany(() => TurnoSesion, (turno) => turno.tatuador)
+  public turnosTatuador?: TurnoSesion[];
+
   constructor(
     id?: number,
     realname?: string,
     surname?: string,
     username?: string,
-    profile_photo?: string,
     birth_date?: Date,
+    profile_photo?: string,
+    especialidad?: string,
     delete_date?: Date,
     creationuser?: string,
     creationtimestamp?: Date,
@@ -88,13 +100,16 @@ export class User {
     this.realname = realname;
     this.surname = surname;
     this.username = username;
-    this.profile_photo = profile_photo;
     this.birth_date = birth_date;
+    this.profile_photo = profile_photo;
+    this.especialidad = especialidad;
     this.delete_date = delete_date;
-    this.creationuser = creationuser;
+    this.creationuser = creationuser ?? 'system';
     this.creationtimestamp = creationtimestamp;
     this.modificationuser = modificationuser;
     this.modificationtimestamp = modificationtimestamp;
-    this.status = status;
+    this.status = status ?? true;
   }
+
+
 }
