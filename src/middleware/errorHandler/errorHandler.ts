@@ -2,21 +2,24 @@ import { Request, Response, NextFunction } from 'express';
 import { CustomError } from './interface/customError.Interface.js';
 
 const errorHandler = (err: CustomError, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack || err);
+  console.error(err);
+
+  if (res.headersSent) {
+    return next(err); 
+  }
 
   const status = err.status || 500;
-  const name = err.name || 'Internal Server Error';
-  const message = err.message || undefined;
-  const stack = err.stack || undefined;
+  const name = err.name || 'InternalServerError';
+  const message = err.message || 'Error interno del servidor';
 
   res.status(status).json({
-    name,
-    status,
-    message,
-    stack,
+    error: {
+      name,
+      status,
+      message,
+      //...(process.env.NODE_ENV === 'development' && { stack: err.stack }), 
+    },
   });
 };
-
-
 
 export default errorHandler;

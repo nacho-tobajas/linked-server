@@ -8,27 +8,30 @@ import { fileURLToPath } from 'url';
 
 import errorHandler from './middleware/errorHandler/errorHandler.js';
 
-import swaggerDocs from './swagger.js';
+import 'reflect-metadata';
+
 import { InversifyExpressServer } from 'inversify-express-utils';
 import { container } from './config/dependency-injection/inversify.config.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Inicializar el servidor con Inversify y Express
 const server = new InversifyExpressServer(container);
 
-server.setConfig((app) => {
+server.setConfig(async (app) => {
   // Configuramos Express para que pueda analizar solicitudes con formato JSON
   app.use(express.json());
-  app.use(cors());
 
-  //app.use(commonRouter);
+  if (process.env.NODE_ENV === 'production') {
+    app.use(cors({
+      origin: 'https://dmcoffers-client.pages.dev',
+      credentials: true
+    }));
+  } else {
+    app.use(cors());
+  }
 
-  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+  // Si tu carpeta "uploads" está en la raíz del proyecto
+  app.use('/uploads', express.static(path.resolve('uploads')));
 
-  //ruta para utilizar documentacion de swagger
-  swaggerDocs(app);
 });
 
 server.setErrorConfig((app) => {

@@ -1,5 +1,7 @@
 export class UserDto {
     idUser: number | undefined;
+    idRolApl: number | undefined; //Nuevo
+    email: string | undefined; //Nuevo
     rolDesc: string | undefined;
     realname: string | undefined;
     surname: string | undefined;
@@ -12,9 +14,15 @@ export class UserDto {
     status: boolean | undefined;
     modificationuser?: string | undefined;
     modificationtimestamp?: Date | undefined;
+    resetPasswordToken?: string | undefined;
+    resetPasswordExpires?: Date | undefined;
 
     constructor(
         idUser?: number,
+        idRolApl?: number, //Nuevo
+        email?: string, //Nuevo
+        resetPasswordToken?:string, //Nuevo
+        resetPassswordExpires?:Date, //Nuevo
         rolDesc?: string,
         realname?: string,
         surname?: string,
@@ -30,6 +38,10 @@ export class UserDto {
 
     ) {
         this.idUser = idUser;
+        this.idRolApl = idRolApl; //Nuevo
+        this.email = email; //Nuevo
+        this.resetPasswordToken = resetPasswordToken; //Nuevo
+        this.resetPasswordExpires = resetPassswordExpires; //Nuevo
         this.rolDesc = rolDesc;
         this.realname = realname;
         this.surname = surname;
