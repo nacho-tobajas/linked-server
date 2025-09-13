@@ -12,11 +12,16 @@ import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplSe
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { UserRepository } from '../../repositories/usuarios/user.dao.js';
 import { UserRolRepository } from '../../repositories/usuarios/user-rol-apl.dao.js';
+
 import { RolAplRepository } from '../../repositories/rol/rol-apl.dao.js';
 import { SweItemMenuController } from '../../controllers/sweitemmenu/sweitemmenu.controller.js';
 import { SideMenuRepository } from '../../repositories/sweitemmenu/sweitemmenu.repository.js';
 import { ISweItemMenuService } from '../../services/interfaces/sweitemmenu/ISweItemMenu.js';
 import { SweItemMenuService } from '../../services/sweitemmenu/sweitemmenu.service.js';
+import { IUserRepository } from '../../repositories/interfaces/user/IUserRepository.js';
+import { IUserAuthRepository } from '../../repositories/interfaces/user/IUserAuthRepository.js';
+
+import { UserMapper } from '../../mappers/user/user.mapper.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -27,8 +32,9 @@ container.bind<UserController>(UserController).toSelf();
 container.bind<SweItemMenuController>(SweItemMenuController).toSelf();
 
 // Repositorios
-container.bind<UserAuthRepository>(UserAuthRepository).toSelf();
-container.bind<UserRepository>(UserRepository).toSelf();
+//container.bind<UserAuthRepository>(UserAuthRepository).toSelf();
+
+//container.bind<UserRepository>(UserRepository).toSelf();
 container.bind<UserRolRepository>(UserRolRepository).toSelf();
 container.bind<RolAplRepository>(RolAplRepository).toSelf();
 container.bind<SideMenuRepository>(SideMenuRepository).toSelf();
@@ -39,4 +45,11 @@ container.bind<IUserService>(UserService).to(UserService);
 container.bind<IPasswordService>(PasswordService).to(PasswordService);
 container.bind<IUserRolAplService>(UserRolAplService).to(UserRolAplService);
 container.bind<ISweItemMenuService>(SweItemMenuService).to(SweItemMenuService);
+container.bind<IUserRepository>(UserRepository).to(UserRepository);
+container.bind<IUserAuthRepository>(UserAuthRepository).toSelf();
+
+//mappers
+container.bind<UserMapper>(UserMapper).toSelf();
+
+
 export { container };

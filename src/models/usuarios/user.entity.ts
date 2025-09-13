@@ -5,12 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
-  JoinColumn,
   DeleteDateColumn,
   Relation,
   OneToMany,
-  ManyToMany,
-  JoinTable,
 } from 'typeorm';
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
@@ -30,6 +27,9 @@ export class User {
   @Column({ name: 'username', type: 'varchar' })
   public username: string | undefined;
 
+  @Column({ name: 'email', type: 'varchar', length: 255 }) //Agregado
+  public email: string | undefined;
+
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
 
@@ -41,7 +41,13 @@ export class User {
 
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser: string | undefined;
+  //Nuevo
+  @Column({ name: 'reset_password_token', type: 'varchar', length: 255 })
+  public resetPasswordToken: string | undefined;
 
+  @Column({ name: 'reset_password_expires', type: 'timestamp' })
+  public resetPasswordExpires: Date | undefined;
+  //
   @CreateDateColumn()
   public creationtimestamp: Date | undefined;
 
@@ -75,6 +81,7 @@ export class User {
     realname?: string,
     surname?: string,
     username?: string,
+    email?: string, // Agregado
     profile_photo?: string,
     birth_date?: Date,
     delete_date?: Date,
@@ -88,6 +95,7 @@ export class User {
     this.realname = realname;
     this.surname = surname;
     this.username = username;
+    this.email = email; // Agregado
     this.profile_photo = profile_photo;
     this.birth_date = birth_date;
     this.delete_date = delete_date;
