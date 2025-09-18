@@ -25,7 +25,7 @@ export class SweItemMenuController {
             if (sweItemMenu.length > 0) {
                 res.status(200).json(sweItemMenu);
             } else {
-                res.status(404).json({ message: 'No se han hayado items de menu' });
+                res.status(404).json({ message: 'No se han encontrado items de menu' });
             }
         } catch (error) {
             next(error);

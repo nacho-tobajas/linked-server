@@ -1,4 +1,4 @@
-import {  Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AppDataSource } from '../../config/pg-database/db.js';
 import { DatabaseErrorCustom } from '../../middleware/errorHandler/dataBaseError.js';
 import { errorEnumRol } from '../../middleware/errorHandler/constants/errorConstants.js';
@@ -15,8 +15,8 @@ export class RolAplRepository {
 
   async findOne(id: number): Promise<RolApl | undefined> {
     try {
-      const rolApl = await this._RolAplRepo.findOneBy({id});
-      return rolApl?? undefined;
+      const rolApl = await this._RolAplRepo.findOneBy({ id });
+      return rolApl ?? undefined;
     } catch (error) {
       console.error(errorEnumRol.rolIndicatedNotFound, error);
       throw new DatabaseErrorCustom(errorEnumRol.rolIndicatedNotFound, 500);
@@ -25,8 +25,18 @@ export class RolAplRepository {
 
   async findByRolName(rolName: string): Promise<RolApl | undefined> {
     try {
-      const rolApl =  await this._RolAplRepo.findOne({ where: { description: rolName } });
-      return rolApl?? undefined;
+      const rolApl = await this._RolAplRepo.findOne({ where: { description: rolName } });
+      return rolApl ?? undefined;
+    } catch (error) {
+      console.error(errorEnumRol.rolIndicatedNotFound, error);
+      throw new DatabaseErrorCustom(errorEnumRol.rolIndicatedNotFound, 404);
+    }
+  }
+
+  async findAll(): Promise<RolApl[] | undefined> {
+    try {
+      const rolApl = await this._RolAplRepo.find();
+      return rolApl ?? undefined;
     } catch (error) {
       console.error(errorEnumRol.rolIndicatedNotFound, error);
       throw new DatabaseErrorCustom(errorEnumRol.rolIndicatedNotFound, 404);

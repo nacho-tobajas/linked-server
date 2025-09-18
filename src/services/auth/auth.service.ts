@@ -1,7 +1,6 @@
 // auth.service.ts
 import { UserAuthRepository } from '../../repositories/usuarios/user-auth.dao.js';
 import { UserAuth } from '../../models/usuarios/user-auth.entity.js';
-import { ValidationError } from '../../middleware/errorHandler/validationError.js';
 import { verifyPassword } from '../../middleware/auth/authHash.js';
 import { UserService } from '../user/user.service.js';
 import { generateToken } from '../../shared/Utils/jwtUtils.js';
@@ -13,15 +12,19 @@ import { PasswordService } from './password.service.js';
 import { User } from '../../models/usuarios/user.entity.js';
 import { UserRolAplService } from '../user/user-rol-apl.service.js';
 import { IUserRolAplService } from '../interfaces/user/IUserRolAplService.js';
+import { IUserAuthRepository } from '../../repositories/interfaces/user/IUserAuthRepository.js';
+import nodemailer from 'nodemailer'; 
+import { info } from 'console';
+import { AuthorizationError } from '../../middleware/errorHandler/authorizationError.js';
 
 @injectable()
 export class AuthService implements IAuthService {
-  private _userAuthRepository: UserAuthRepository;
+  private _userAuthRepository: IUserAuthRepository;
   private _passwordService: IPasswordService;
   private _userRolAplService: IUserRolAplService;
 
   constructor(
-    @inject(UserAuthRepository) userAuthRepository: UserAuthRepository,
+    @inject(UserAuthRepository) userAuthRepository: IUserAuthRepository,
     @inject(PasswordService) passwordService: IPasswordService,
     @inject(UserRolAplService) userRolAplService: IUserRolAplService,
 
@@ -36,7 +39,7 @@ export class AuthService implements IAuthService {
     const isValidPassword = await this._passwordService.verifyPassword(user.userauth?.password!, password);
 
     if (!isValidPassword) {
-      throw new ValidationError('Contraseña incorrecta');
+      throw new AuthorizationError('Contraseña incorrecta');
     }
 
     let userRolAplList = (await user.userRolApl)?.map(c => c);
