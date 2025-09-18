@@ -87,6 +87,7 @@ export class UserController {
             realname: req.body.realname,
             surname: req.body.surname,
             username: req.body.username,
+                profile_photo: undefined,
             birth_date: req.body.birth_date,
             creationuser: req.body.creationuser,
             creationtimestamp: undefined,
