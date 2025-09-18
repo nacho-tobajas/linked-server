@@ -8,7 +8,7 @@ await AppDataSource.initialize()
 
 // Iniciamos el servidor Express en el puerto 3000
 // Para correr esto hay que hacer npm run start-dev en terminal
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`); // necesita comillas invertidas para que tome el valor de port como variable y no convierta el texto completo en string
