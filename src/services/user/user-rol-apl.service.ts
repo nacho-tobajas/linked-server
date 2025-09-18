@@ -22,7 +22,10 @@ export class UserRolAplService implements IUserRolAplService {
     }
 
     async updateUserRoles(userId: number, roleIds: number[], updatedBy: string): Promise<RolApl[]> {
-        // Asigna nuevos roles
+        // Primero elimino los roles actuales del usuario
+        await this._userRolRepository.deleteByUserId(userId);
+        
+        // Asigno nuevos roles
         const result: RolApl[] = [];
         for (const idRol of roleIds) {
             result.push(await this.createUserRolApl(userId, idRol, updatedBy));

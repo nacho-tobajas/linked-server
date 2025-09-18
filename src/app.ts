@@ -20,18 +20,8 @@ server.setConfig(async (app) => {
   // Configuramos Express para que pueda analizar solicitudes con formato JSON
   app.use(express.json());
 
-  if (process.env.NODE_ENV === 'production') {
-    app.use(cors({
-      origin: 'https://dmcoffers-client.pages.dev',
-      credentials: true
-    }));
-  } else {
-    app.use(cors());
-  }
-
-  // Si tu carpeta "uploads" está en la raíz del proyecto
   app.use('/uploads', express.static(path.resolve('uploads')));
-
+  
 });
 
 server.setErrorConfig((app) => {

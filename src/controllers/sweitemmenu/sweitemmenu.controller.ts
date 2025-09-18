@@ -5,7 +5,8 @@ import { ISweItemMenuService } from "../../services/interfaces/sweitemmenu/ISweI
 import { controller, httpDelete, httpGet, httpPost, httpPut } from "inversify-express-utils";
 import { NextFunction, Request, Response } from "express";
 import { validateInputData } from "../../middleware/validation/validation-middleware.js";
-import { createSweItemMenuValidationRules, deleteSweItemMenuValidationRules, getSweItemMenuValidationRules, updateSweItemMenuValidationRules } from "../../middleware/validation/validations-rules/sweitemmenu-validators.js";
+import { createSweItemMenuValidationRules, getSweItemMenuValidationRules, updateSweItemMenuValidationRules } from "../../middleware/validation/validations-rules/sweitemmenu-validators.js";
+import { deleteSupportTicketValidationRules } from "../../middleware/validation/validations-rules/support-ticket-validations.js";
 
 @controller('/api/sweItemMenu', authenticateToken)
 export class SweItemMenuController {
@@ -79,7 +80,7 @@ export class SweItemMenuController {
         }
     };
 
-    @httpDelete('/:id', validateInputData(deleteSweItemMenuValidationRules))
+    @httpDelete('/:id', validateInputData(deleteSupportTicketValidationRules))
     public async remove(req: Request, res: Response, next: NextFunction) {
         const id = parseInt(req.params.id, 10);
 
