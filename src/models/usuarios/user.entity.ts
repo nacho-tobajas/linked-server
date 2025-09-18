@@ -37,9 +37,9 @@ export class User {
   public birth_date: Date | undefined;
 
   @Column({ name: 'especialidad', type: 'varchar', nullable: true })
-  public especialidad: string | undefined;
+  public especialidad?: string | undefined;
 
-  @Column({ name: 'creationuser', type: 'varchar' })
+  @Column({ name: 'profile_photo', type: 'varchar' })
   public profile_photo: string | undefined;;
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })

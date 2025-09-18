@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  Relation,
 } from 'typeorm';
 import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
 
@@ -18,7 +19,8 @@ export class ImagenRef {
     onDelete: 'RESTRICT',
     eager: true,
   })
-  public turnoSesion!: TurnoSesion;
+  public turnoSesion!: Relation<TurnoSesion>;
+
 
   @Column({ name: 'image_path', type: 'varchar', nullable: true })
   public image_path?: string;
@@ -36,14 +38,12 @@ export class ImagenRef {
   public modificationuser?: string;
 
   constructor(
-    turnoSesion?: TurnoSesion,
     image_path?: string,
     creationuser?: string,
     creationtimestamp?: Date,
     modificationuser?: string,
     modificationtimestamp?: Date,
   ) {
-    this.turnoSesion = turnoSesion!;
     this.image_path = image_path;
     this.creationuser = creationuser ?? 'system';
     this.creationtimestamp = creationtimestamp ?? new Date();

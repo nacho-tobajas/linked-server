@@ -28,7 +28,7 @@ export class PrecioSesion {
 
   @Column({ name: 'modificationuser', type: 'varchar', length: 25, nullable: true })
   public modificationuser: string | undefined;
-
+          
   constructor(
     id?:number,
     precio?: number,

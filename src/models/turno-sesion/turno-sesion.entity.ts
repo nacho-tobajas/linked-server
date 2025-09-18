@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  Relation,
 } from 'typeorm';
 import { User } from '../usuarios/user.entity.js';
 import { ImagenRef } from '../imagen-ref/imagen-ref.entity.js';
@@ -25,10 +26,10 @@ export class TurnoSesion {
   public id_cliente: number | undefined;
 
   @ManyToOne(() => User, (user) => user.turnosCliente, { eager: true })
-  public cliente!: User;
+  public cliente!: Relation<User>;
 
   @ManyToOne(() => User, (user) => user.turnosTatuador, { eager: true })
-  public tatuador!: User;
+  public tatuador!: Relation<User>;
 
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser: string | undefined;
@@ -54,8 +55,8 @@ export class TurnoSesion {
     id?: number,
     fecha?: Date,
     hora?: string,
-    cliente?: User,
-    tatuador?: User,
+    cliente?: Relation<User>,
+    tatuador?: Relation<User>,
     creationuser?: string,
     creationtimestamp?: Date,
     modificationuser?: string,
