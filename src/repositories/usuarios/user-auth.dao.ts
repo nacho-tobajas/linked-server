@@ -45,7 +45,7 @@ export class UserAuthRepository implements IBaseRepository<UserAuth> {
     }
   }
 
-  async update(id: number, user: Partial<UserAuth>): Promise<UserAuth | undefined> {
+  async update(id: number, user: Partial<UserAuth>): Promise<UserAuth > {
     try {
       // Recuperamos el usuario existente
       const existingUser = await this.repository.findOne({ where: { id } });

@@ -3,6 +3,11 @@ import pkg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 import { DataSource } from 'typeorm';
+import { User } from '../../models/usuarios/user.entity.js';
+import { UserAuth } from '../../models/usuarios/user-auth.entity.js';
+import { SupportTicket } from '../../models/support-ticket/support-ticket.entity.js';
+import { UserRolApl } from '../../models/usuarios/user-rol-apl.entity.js';
+import { RolApl } from '../../models/roles/rol-apl.entity.js';
 
 // Cargar las variables de entorno desde el archivo .env
 if (process.env.NODE_ENV != 'production') {
@@ -28,11 +33,18 @@ export const AppDataSource = new DataSource({
   database: process.env.POSTGRES_DB,
   synchronize: false, // tiene que estar en true momentaneamente se deja en false por cuestiones funcionales
   //logging: true,
-  entities: [
-    process.env.NODE_ENV === 'development'
-      ? 'src/models/**/*.ts' // en desarrollo
-      : 'dist/models/**/*.js', // después de compilar
-  ],
+  entities:
+    process.env.NODE_ENV === 'test'?[
+      User,
+      UserAuth,
+      SupportTicket,
+      UserRolApl,
+      RolApl,
+    ]
+    :process.env.NODE_ENV === 'development'
+      ? ['src/models/**/*.ts'] // en desarrollo
+      : ['dist/models/**/*.js'], // después de compilar
+  
   migrations: ['src/migrations/**/*.js'],
   subscribers: ['src/subscribers/**/*.js'],
 });

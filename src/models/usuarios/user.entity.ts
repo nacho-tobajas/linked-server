@@ -5,16 +5,15 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
-  JoinColumn,
   DeleteDateColumn,
   Relation,
   OneToMany,
   ManyToMany,
-  JoinTable,
 } from 'typeorm';
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
 import { RolApl } from '../roles/rol-apl.entity.js';
+import { SupportTicket } from '../support-ticket/support-ticket.entity.js';
 import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
 
 @Entity('swe_usrapl') // El nombre de la tabla en la base de datos
@@ -31,6 +30,9 @@ export class User {
   @Column({ name: 'username', type: 'varchar' })
   public username: string | undefined;
 
+  @Column({ name: 'email', type: 'varchar', length: 255 }) //Agregado
+  public email: string | undefined;
+
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
 
@@ -45,7 +47,13 @@ export class User {
 
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser: string | undefined;
+        //Nuevo
+  @Column({ name: 'reset_password_token', type: 'varchar', length: 255 })
+  public resetPasswordToken: string | undefined;
 
+  @Column({name: 'reset_password_expires', type: 'timestamp'})
+  public resetPasswordExpires: Date | undefined; 
+        //
   @CreateDateColumn()
   public creationtimestamp: Date | undefined;
 
@@ -74,6 +82,13 @@ export class User {
   @OneToMany(() => UserRolApl, (userRolApl) => userRolApl.user, { lazy: true })
   public userRolApl?: Promise<UserRolApl[]>;
 
+  @ManyToMany(() => SupportTicket, (supportticket) => supportticket.user,{
+    nullable: true,
+    lazy: true
+  })
+
+  public ticketlist?: Promise<SupportTicket[]>
+
   // Relación con Turnos (puede ser cliente o tatuador)
   @OneToMany(() => TurnoSesion, (turno) => turno.cliente)
   public turnosCliente?: TurnoSesion[];
@@ -86,6 +101,7 @@ export class User {
     realname?: string,
     surname?: string,
     username?: string,
+    email?: string, // Agregado
     birth_date?: Date,
     profile_photo?: string,
     especialidad?: string,
@@ -100,8 +116,9 @@ export class User {
     this.realname = realname;
     this.surname = surname;
     this.username = username;
-    this.birth_date = birth_date;
+    this.email = email; // Agregado
     this.profile_photo = profile_photo;
+    this.birth_date = birth_date;
     this.especialidad = especialidad;
     this.delete_date = delete_date;
     this.creationuser = creationuser ?? 'system';
