@@ -85,7 +85,6 @@ export class UserService implements IUserService {
         );
 
         const userOutput = await this._userMapper.convertToDto(user, currentRol!);
-
         return userOutput;
       })
     );
@@ -100,6 +99,7 @@ export class UserService implements IUserService {
     const currentRol = await this._userRolAplService.SearchUserCurrentRol(
       userRolAplList!
     );
+
     if (!currentRol) return undefined;
 
     const userOutput = await this._userMapper.convertToDto(user, currentRol);

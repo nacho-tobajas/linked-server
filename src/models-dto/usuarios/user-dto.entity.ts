@@ -6,6 +6,7 @@ export class UserDto {
     realname: string | undefined;
     surname: string | undefined;
     username: string | undefined;
+    profile_photo: string | undefined;
     birth_date: Date | undefined;
     delete_date: Date | undefined;
     creationuser: string | undefined;
@@ -27,6 +28,7 @@ export class UserDto {
         realname?: string,
         surname?: string,
         username?: string,
+        profile_photo?: string,
         birth_date?: Date,
         delete_date?: Date,
         creationuser?: string,
@@ -46,6 +48,7 @@ export class UserDto {
         this.realname = realname;
         this.surname = surname;
         this.username = username;
+        this.profile_photo = profile_photo;
         this.birth_date = birth_date;
         this.delete_date = delete_date;
         this.creationuser = creationuser;
