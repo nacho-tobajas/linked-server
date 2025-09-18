@@ -15,6 +15,14 @@ export enum errorEnumHosting {
   hostingNotDeleted = 'Error al borrar el hosting',
 }
 
+export enum errorEnumHostingPublisher {
+  hostingPublisherNotCreated = 'Error al crear el hosting',
+  hostingPublisherIndicatedNotFound = 'Error al obtener el hosting indicado',
+  hostingPublisherNotFounded = 'Error al obtener los hostings',
+  hostingPublisherNotUpdated = 'Error al actualizar el hosting',
+  hostingPublisherNotDeleted = 'Error al borrar el hosting',
+}
+
 export enum errorEnumCategories {
   categoryNotCreated = 'Error al crear la categoria',
   categoryIndicatedNotFound = 'Error al obtener la categoria indicada',

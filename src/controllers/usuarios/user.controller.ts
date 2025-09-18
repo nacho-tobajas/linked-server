@@ -4,11 +4,14 @@ import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { inject } from 'inversify';
 import { controller, httpDelete, httpGet, httpPost, httpPut } from 'inversify-express-utils';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
-import { createUserValidationRules, deleteUserValidationRules, getAllUserRolsValidationRules, getUserValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
+import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
+import { OkNegotiatedContentResult } from 'inversify-express-utils/lib/results/OkNegotiatedContentResult.js';
+import { JsonResult } from 'inversify-express-utils/lib/results/JsonResult.js';
 import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
-import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
+import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
+import { ValidationError } from '../../middleware/errorHandler/validationError.js';
 
 @controller('/api/users')
 export class UserController {
@@ -16,6 +19,7 @@ export class UserController {
     private _userRolAplService: IUserRolAplService;
 
     authCryptography: AuthCryptography = new AuthCryptography();
+
 
 
     constructor(
@@ -32,8 +36,24 @@ export class UserController {
             const users = await this._userService.findAll();
             if (users.length > 0) {
                 res.status(200).json(users);
+                //new OkNegotiatedContentResult(users);
             } else {
-               return  res.status(404).json({ message: 'No se han encontrado usuarios' });
+                return new JsonResult({ message: 'No se han encontrado usuarios' }, 404);
+            }
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    @httpGet('/getAllRoles', authenticateToken, authorizeRol('Administrador'))
+    public async getAllRoles(req: Request, res: Response, next: NextFunction) {
+        try {
+            const roles = await this._userRolAplService.getRoles();
+
+            if (roles) {
+                res.status(200).json(roles);
+            } else {
+                res.status(404).json({ message: 'No existen roles cargados' });
             }
         } catch (error) {
             next(error);
@@ -58,10 +78,25 @@ export class UserController {
 
     @httpPost('/register', validateInputData(createUserValidationRules))
     public async create(req: Request, res: Response, next: NextFunction) {
-        console.log(req.body);
 
-        const newUser = req.body;
-        newUser.password = this.authCryptography.decrypt(newUser.password);
+        const newUser = { //req.body solamente
+            idUser: undefined,
+            idRolApl: req.body.idRolApl,
+            rolDesc: undefined,
+            email: req.body.email, //Agregado
+            realname: req.body.realname,
+            surname: req.body.surname,
+            username: req.body.username,
+                profile_photo: undefined,
+            birth_date: req.body.birth_date,
+            creationuser: req.body.creationuser,
+            creationtimestamp: undefined,
+            password: this.authCryptography.decrypt(req.body.password),
+            status: req.body.status,
+            delete_date: req.body.delete_date,
+            modificationuser: undefined,
+            modificationtimestamp: undefined,
+        };
 
         try {
             const createdUser = await this._userService.create(newUser);
@@ -89,6 +124,71 @@ export class UserController {
         }
     };
 
+    //Nuevo método para restablecer la contraseña
+    @httpPost('/forgot-password', validateInputData(forgotPasswordValidationRules))
+    public async forgotPassword(req: Request, res: Response, next: NextFunction) {
+
+        const { email } = req.body;
+        try {
+            //Busca el usuario por el email
+            const user = await this._userService.findByEmail(email);
+
+            if (user === undefined) {
+                return res.status(404).json({ message: "El correo ingresado no está registrado" });
+            }
+
+            else {
+                //Genero un token aleatorio
+                const crypto = await import('crypto');
+                const token = crypto.randomBytes(32).toString('hex');
+                const expires = new Date(Date.now() + 60 * 60 * 1000);
+
+                user.resetPasswordToken = token;
+                user.resetPasswordExpires = expires;
+
+
+                if (!user.id) {
+                    throw new ValidationError('Usuario no tiene un ID válido');
+                }
+
+                await this._userService.update(user.id, user);
+
+                if (!user.email) {
+                    throw new ValidationError('Usuario no tiene un email válido');
+                }
+
+                await this._userService.sendResetPass(user.email, token);
+                return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
+            }
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    @httpPost('/reset-password', validateInputData(resetPasswordValidationRules))
+    public async resetPass(req: Request, res: Response, next: NextFunction) {
+
+        const token = req.body.token;
+        const newPassword = this.authCryptography.decrypt(req.body.newPassword)
+
+        try {
+            const user = await this._userService.findByResetToken(token);
+
+            if (!user) {
+                throw new ValidationError('Token invalido o expirado');
+            }
+
+            if (user.id === undefined) {
+                throw new ValidationError('Usuario no tiene un ID válido');
+            }
+            await this._userService.updatePassword(user.id, newPassword);
+
+            return res.json({ message: 'Contraseña actualizada correctamente' });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     @httpDelete('/:id', authenticateToken, validateInputData(deleteUserValidationRules))
     public async remove(req: Request, res: Response, next: NextFunction) {
 
@@ -106,14 +206,14 @@ export class UserController {
         }
     };
 
-    @httpPut('/updateUser/:id', authenticateToken, validateInputData(updateUserByAdminValidationRules), authorizeRol('admin'))
+    @httpPut('/updateUser/:id', authenticateToken, validateInputData(updateUserByAdminValidationRules))
     public async updateUserByAdmin(req: Request, res: Response, next: NextFunction) {
 
         const id = parseInt(req.params.id, 10);
         const userUpdates = req.body;
 
         try {
-            const updatedUser = await this._userService.updateUserByAdmin(id, userUpdates, userUpdates.rolDescription);
+            const updatedUser = await this._userService.updateUserByAdmin(id, userUpdates);
             if (updatedUser) {
                 res.status(200).json(updatedUser);
             } else {
@@ -139,7 +239,8 @@ export class UserController {
             next(error);
         }
     };
-    @httpPut('/:id/roles', authenticateToken, authorizeRol('admin'))
+
+    @httpPut('/:id/roles', authenticateToken, authorizeRol('Administrador'))
     public async updateUserRoles(req: Request, res: Response, next: NextFunction) {
         const id = parseInt(req.params.id, 10);
         const roleIds: number[] = req.body.roleIds;
@@ -148,7 +249,7 @@ export class UserController {
             const updatedRoles = await this._userRolAplService.updateUserRoles(
                 id,
                 roleIds,
-                'admin'
+                'Administrador'
             );
             res.status(200).json(updatedRoles);
         } catch (error) {
@@ -156,4 +257,6 @@ export class UserController {
         }
 
     }
+
+
 }
