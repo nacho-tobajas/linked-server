@@ -16,7 +16,7 @@
   "engines": {
     "node": "20.x"
   },
-  "author": "Hoyos, A. ; Marcosano, M. ; Ceballos, R.; Fernandez, M.; Fernandez, J.; Tobajas Ramirez, I.",
+  "author": "Hoyos, A. ; Marcosano, M. ; Ceballos, R.; Fernandez, M.; Tobajas Ramirez, I.",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^20.19.13",
