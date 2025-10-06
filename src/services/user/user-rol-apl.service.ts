@@ -57,7 +57,7 @@ export class UserRolAplService implements IUserRolAplService {
             rolToAsign = rol?.id;
 
         } else if (!currentRol) {
-            rolToAsign = userRolIdCons.Usuariotienda;
+            rolToAsign = userRolIdCons.Cliente;
 
         } else {
             rolToAsign = currentRol.id;
