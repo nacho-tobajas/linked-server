@@ -60,6 +60,7 @@ export class UserMapper {
             username: userWithChanges.username && userWithChanges.username.trim() !== ''
                 ? userWithChanges.username
                 : oldUser.username,
+                profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
             birth_date: userWithChanges.birth_date ?? oldUser.birth_date,
             delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
             status: userWithChanges.status ?? oldUser.status,
@@ -84,6 +85,7 @@ export class UserMapper {
             realname: userCreated?.realname,
             surname: userCreated?.surname,
             username: userCreated?.username,
+                profile_photo: userCreated?.profile_photo,
             birth_date: userCreated?.birth_date,
             creationuser: userCreated?.creationuser,
             creationtimestamp: userCreated?.creationtimestamp,

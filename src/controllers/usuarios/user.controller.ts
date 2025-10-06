@@ -87,6 +87,7 @@ export class UserController {
             realname: req.body.realname,
             surname: req.body.surname,
             username: req.body.username,
+                profile_photo: undefined,
             birth_date: req.body.birth_date,
             creationuser: req.body.creationuser,
             creationtimestamp: undefined,
@@ -132,7 +133,11 @@ export class UserController {
             //Busca el usuario por el email
             const user = await this._userService.findByEmail(email);
 
-            if (user) {
+            if (user === undefined) {
+                return res.status(404).json({ message: "El correo ingresado no está registrado" });
+            }
+
+            else {
                 //Genero un token aleatorio
                 const crypto = await import('crypto');
                 const token = crypto.randomBytes(32).toString('hex');
@@ -153,8 +158,8 @@ export class UserController {
                 }
 
                 await this._userService.sendResetPass(user.email, token);
+                return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
             }
-            return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
         } catch (error) {
             next(error);
         }

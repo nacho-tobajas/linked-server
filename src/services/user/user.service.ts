@@ -85,7 +85,6 @@ export class UserService implements IUserService {
         );
 
         const userOutput = await this._userMapper.convertToDto(user, currentRol!);
-
         return userOutput;
       })
     );
@@ -125,8 +124,6 @@ export class UserService implements IUserService {
     const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated, newUser.idRolApl !== undefined ? String(newUser.idRolApl) : undefined);
 
     const userOutput = await this._userMapper.convertToDto(userCreated, rolAsigned!);
-
-    const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated);
 
     return userOutput;
   }
@@ -176,57 +173,5 @@ export class UserService implements IUserService {
   }
 
 }
-    const userToCreate: User = new User();
-    userToCreate.id = undefined;
-    userToCreate.realname = newUser.realname;
-    userToCreate.surname = newUser.surname;
-    userToCreate.username = newUser.username;
-    userToCreate.profile_photo = newUser.profile_photo;
-    userToCreate.birth_date = newUser.birth_date;
-    userToCreate.delete_date = newUser.delete_date;
-    userToCreate.status = newUser.status;
-    userToCreate.creationuser = newUser.creationuser;
-    userToCreate.creationtimestamp = newUser.creationtimestamp;
-    userToCreate.modificationuser = newUser.modificationuser;
-    userToCreate.modificationtimestamp = newUser.modificationtimestamp;
-    userToCreate.userauth = newUserAuth;
 
-    return userToCreate;
-  }
-
-  private async initializeUserToUpdate(
-    id: number,
-    userWithChanges: User,
-    oldUser: User
-  ) {
-    const userToUpdate: User = {
-      id: oldUser.id,
-      realname:
-        userWithChanges.realname && userWithChanges.realname.trim() !== ''
-          ? userWithChanges.realname
-          : oldUser.realname,
-      surname:
-        userWithChanges.surname && userWithChanges.surname.trim() !== ''
-          ? userWithChanges.surname
-          : oldUser.surname,
-      username:
-        userWithChanges.username && userWithChanges.username.trim() !== ''
-          ? userWithChanges.username
-          : oldUser.username,
-      profile_photo:
-        userWithChanges.username && userWithChanges.username.trim() !== ''
-          ? userWithChanges.username
-          : oldUser.username,
-      birth_date: userWithChanges.birth_date ?? oldUser.birth_date,
-      delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
-      status: userWithChanges.status ?? oldUser.status,
-      creationuser: oldUser.creationuser, // No debe cambiar en la actualización
-      creationtimestamp: oldUser.creationtimestamp, // No debe cambiar en la actualización
-      modificationuser:
-        userWithChanges.modificationuser ?? oldUser?.modificationuser,
-      modificationtimestamp: new Date(), // Fecha de modificación actual
-    };
-    return userToUpdate;
-  }
-}
 
