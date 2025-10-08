@@ -12,6 +12,8 @@ import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
+import { upload } from '../../config/cloudinary/multer.config.js';
+import path from 'path';
 
 @controller('/api/users')
 export class UserController {
@@ -106,19 +108,32 @@ export class UserController {
         }
     };
 
-    @httpPut('/:id', authenticateToken, validateInputData(updateUserValidationRules))
+    @httpPut('/:id', upload.single('image'), authenticateToken, validateInputData(updateUserValidationRules))
     public async update(req: Request, res: Response, next: NextFunction) {
-
         const id = parseInt(req.params.id, 10);
         const userUpdates = req.body;
 
         try {
-            const updatedUser = await this._userService.update(id, userUpdates);
+           // Si Angular envía el usuario dentro de FormData
+    let userUpdates = req.body;
+    if (req.body.user) {
+      userUpdates = JSON.parse(req.body.user);
+    }
+
+    if (req.file) {
+      // Si usás Cloudinary: req.file.path será la URL pública
+      // Si usás local: construimos la ruta relativa accesible
+      userUpdates.profile_photo = req.file.path.includes("uploads")
+        ? `/uploads/users/${path.basename(req.file.path)}`
+        : req.file.path;
+    }
+
+    const updatedUser = await this._userService.update(id, userUpdates);
             if (updatedUser) {
                 res.status(200).json(updatedUser);
             } else {
                 res.status(404).json({ message: 'Usuario no encontrado' });
-            }
+                }
         } catch (error) {
             next(error);
         }
@@ -206,7 +221,7 @@ export class UserController {
         }
     };
 
-    @httpPut('/updateUser/:id', authenticateToken, validateInputData(updateUserByAdminValidationRules))
+    @httpPut('/updateUser/:id', upload.single('image'),authenticateToken, validateInputData(updateUserByAdminValidationRules))
     public async updateUserByAdmin(req: Request, res: Response, next: NextFunction) {
 
         const id = parseInt(req.params.id, 10);
