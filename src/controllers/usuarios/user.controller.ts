@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../../services/user/user.service.js';
 import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { inject } from 'inversify';
-import { controller, httpDelete, httpGet, httpPost, httpPut } from 'inversify-express-utils';
+import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut } from 'inversify-express-utils';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
 import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
@@ -12,6 +12,8 @@ import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
+import path from 'path';
+import { upload } from '../../config/cloudinary/multer.config.js';
 
 @controller('/api/users')
 export class UserController {
@@ -123,6 +125,38 @@ export class UserController {
             next(error);
         }
     };
+
+    //Nuevo metodo para actualizar la foto de perfil del usuario
+
+    @httpPatch('/:id/profile-photo', authenticateToken, upload.single('image'))
+    public async updateProfilePhoto(req: Request, res: Response, next: NextFunction) {
+  const id = parseInt(req.params.id, 10);
+
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se proporcionó ninguna imagen' });
+    }
+
+    const imageUrl = `/uploads/users/${req.file.filename}`;
+
+    // Actualizar el usuario en la base de datos con esa ruta
+    const updatedUser = await this._userService.update(id, {
+      profile_photo: imageUrl,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Devolver también la URL completa solo en la respuesta (no en la BD)
+    return res.status(200).json({
+      message: "Foto de perfil actualizada correctamente",
+      profile_photo: `${process.env.BASE_URL || "http://localhost:3000"}${imageUrl}`,
+    });
+    } catch (error) {
+      next(error);
+    }
+}
 
     //Nuevo método para restablecer la contraseña
     @httpPost('/forgot-password', validateInputData(forgotPasswordValidationRules))
