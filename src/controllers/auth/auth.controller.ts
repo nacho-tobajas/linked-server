@@ -10,6 +10,7 @@ import { UserService } from '../../services/user/user.service.js';
 import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
 import { loginValidationRules } from '../../middleware/validation/validations-rules/auth-validations.js';
+import axios from 'axios';
 
 @controller('/api/auth')
 export class AuthController {
@@ -30,22 +31,32 @@ export class AuthController {
   @httpPost('/login', validateInputData(loginValidationRules))
   public async login(req: Request, res: Response, next: NextFunction) {
     
-    let { username, password } = req.body;
+    let { username, password, recaptchaToken } = req.body;
 
     password = this.authCryptography.decrypt(password);
     
-    try {
-      const user = await this._userService.findByUserName(username);
+try {
+    // 🔹 Validar reCAPTCHA con Google
+    const captchaResponse = await axios.post(
+      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
+    );
+
+    if (!captchaResponse.data.success) {
+      throw new ValidationError('Captcha inválido, intente nuevamente.');
+    }
+
+    // 🔹 Buscar usuario y validar password
+    const user = await this._userService.findByUserName(username);
 
     if (!user?.id || !user.userauth?.password) {
       throw new ValidationError('Usuario no encontrado');
     }
-      const accessToken = await this._authService.login(user, password);
 
-      return res.json({ accessToken });
+    const accessToken = await this._authService.login(user, password);
 
-      } catch (error) {        
-        return next(error);
-      }
-  }
+    return res.json({ accessToken });
+
+  } catch (error) {        
+    return next(error);
+  }}
 }

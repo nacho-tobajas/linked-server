@@ -4,7 +4,7 @@ import fs from 'fs';
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "./cloudinary.config.js";
 
-// 🔄 Variable para alternar entre Cloudinary o local
+// Variable para alternar entre Cloudinary o local
 const USE_CLOUDINARY = false; // cambia a true si querés Cloudinary
 
 let storage;
@@ -23,7 +23,7 @@ if (USE_CLOUDINARY) {
   // --- Configuración para almacenamiento local ---
   storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      // ✅ Usa process.cwd() para que siempre guarde en la raíz del proyecto
+      // Usa process.cwd() para que siempre guarde en la raíz del proyecto
       const uploadPath = path.join(process.cwd(), "uploads/users");
 
       // Crea el directorio si no existe

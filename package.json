@@ -21,6 +21,7 @@
   "dependencies": {
     "@types/node": "^20.19.13",
     "argon2": "^0.40.3",
+    "axios": "^1.12.2",
     "cloudinary": "^1.41.3",
     "connect-multiparty": "^2.2.0",
     "cors": "^2.8.5",
