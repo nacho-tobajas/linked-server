@@ -9,12 +9,14 @@ import {
   Relation,
   OneToMany,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
 import { RolApl } from '../roles/rol-apl.entity.js';
 import { SupportTicket } from '../support-ticket/support-ticket.entity.js';
 import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
+import { Especialidades } from '../../models/especialidades/especialidades.entity.js';
 
 @Entity('swe_usrapl') // El nombre de la tabla en la base de datos
 export class User {
@@ -35,9 +37,6 @@ export class User {
 
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
-
-  @Column({ name: 'especialidad', type: 'varchar', nullable: true })
-  public especialidad?: string | undefined;
 
   @Column({ name: 'profile_photo', type: 'varchar' })
   public profile_photo: string | undefined;;
@@ -66,6 +65,15 @@ export class User {
 
   @Column({ name: 'status', type: 'boolean' })
   public status: boolean | undefined;
+
+  @ManyToMany(() => Especialidades, (especialidad) => especialidad.tatuadores, {
+  eager: true
+  })
+  @JoinTable({ name: 'tat_tatuador_especialidad',
+    joinColumn: { name: "id_usrapl", referencedColumnName: "id" },
+  inverseJoinColumn: { name: "id_especialidad", referencedColumnName: "id" },
+   })
+  public especialidades?: Promise<Especialidades[]>;
 
 
   // Relaciones
@@ -104,7 +112,6 @@ export class User {
     email?: string, // Agregado
     birth_date?: Date,
     profile_photo?: string,
-    especialidad?: string,
     delete_date?: Date,
     creationuser?: string,
     creationtimestamp?: Date,
@@ -119,7 +126,6 @@ export class User {
     this.email = email; // Agregado
     this.profile_photo = profile_photo;
     this.birth_date = birth_date;
-    this.especialidad = especialidad;
     this.delete_date = delete_date;
     this.creationuser = creationuser ?? 'system';
     this.creationtimestamp = creationtimestamp;

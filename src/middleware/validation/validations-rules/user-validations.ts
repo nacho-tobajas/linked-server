@@ -149,4 +149,33 @@ export const getAllRolsValidationRules = [
     .notEmpty()
     .isInt({ min: 1 })
     .withMessage('Formato de ID invalido'),
-]
+];
+
+export const assignEspecialidadesToUserValidationRules = [
+  param("userId")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("El ID de usuario es inválido."),
+  body("especialidadId")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("El ID de especialidad es inválido."),
+];
+
+export const removeEspecialidadesFromUserValidationRules = [
+  param("userId")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("El ID de usuario es inválido."),
+  param("especialidadId")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("El ID de especialidad es inválido."),
+];
+
+export const getUserEspecialidadesValidationRules = [
+  param("userId")
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage("El ID de usuario es inválido."),
+];

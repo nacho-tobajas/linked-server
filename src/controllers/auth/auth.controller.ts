@@ -41,9 +41,9 @@ try {
       `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
     );
 
-    if (!captchaResponse.data.success) {
+    /*if (!captchaResponse.data.success) {
       throw new ValidationError('Captcha inválido, intente nuevamente.');
-    }
+    }*/
 
     // 🔹 Buscar usuario y validar password
     const user = await this._userService.findByUserName(username);

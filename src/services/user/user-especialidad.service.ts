@@ -1,0 +1,80 @@
+import { inject, injectable } from "inversify";
+import { User } from "../../models/usuarios/user.entity.js";
+import { Especialidades } from "../../models/especialidades/especialidades.entity.js";
+import { UserRepository } from "../../repositories/usuarios/user.dao.js";
+import { EspecialidadesRepository } from "../../repositories/especialidades/especialidades.dao.js";
+import { ValidationError } from "../../middleware/errorHandler/validationError.js";
+
+@injectable()
+export class UserEspecialidadService {
+  constructor(
+    @inject(UserRepository) private userRepo: UserRepository,
+    @inject(EspecialidadesRepository) private espRepo: EspecialidadesRepository
+  ) {}
+
+  // Asigna varias especialidades a un tatuador
+  async updateUserEspecialidades(userId: number, especialidadIds: number[]): Promise<Especialidades[]> {
+    const user = await this.userRepo.findOne(userId);
+
+    if (!user) throw new ValidationError("Usuario no encontrado", 404);
+
+    // Cargamos las especialidades actuales como array
+    const currentEspecialidades = await user.especialidades ?? [];
+
+    // Limpiamos y asignamos nuevas
+    const nuevasEspecialidades: Especialidades[] = [];
+    for (const idEsp of especialidadIds) {
+      const especialidad = await this.espRepo.findOne(idEsp);
+      if (!especialidad) continue;
+      nuevasEspecialidades.push(especialidad);
+    }
+
+    user.especialidades = Promise.resolve(nuevasEspecialidades);
+    await this.userRepo.update(userId,user);
+
+    return nuevasEspecialidades;
+  }
+
+  // Agrega una especialidad a un tatuador
+  async addEspecialidad(userId: number, especialidadId: number): Promise<Especialidades[]> {
+    const user = await this.userRepo.findOne(userId);
+    if (!user) throw new ValidationError("Usuario no encontrado", 404);
+
+    const currentEspecialidades = await user.especialidades ?? [];
+
+    const especialidad = await this.espRepo.findOne(especialidadId);
+    if (!especialidad) throw new ValidationError("Especialidad no encontrada", 404);
+
+    // Solo agregamos si no existe
+    if (!currentEspecialidades.find(e => e.id === especialidad.id)) {
+      currentEspecialidades.push(especialidad);
+      user.especialidades = Promise.resolve(currentEspecialidades);
+      await this.userRepo.update(userId,user);
+    }
+
+    return currentEspecialidades;
+  }
+
+  // Remueve una especialidad de un tatuador
+  async removeEspecialidad(userId: number, especialidadId: number): Promise<Especialidades[]> {
+    const user = await this.userRepo.findOne(userId);
+    if (!user) throw new ValidationError("Usuario no encontrado", 404);
+
+    let currentEspecialidades = await user.especialidades ?? [];
+
+    currentEspecialidades = currentEspecialidades.filter(e => e.id !== especialidadId);
+    user.especialidades = Promise.resolve(currentEspecialidades);
+    await this.userRepo.update(userId,user);
+
+    return currentEspecialidades;
+  }
+
+  // Listar especialidades de un tatuador
+  async getUserEspecialidades(userId: number): Promise<Especialidades[]> {
+    const user = await this.userRepo.findOne(userId);
+    if (!user) throw new ValidationError("Usuario no encontrado", 404);
+
+    return await user.especialidades ?? [];
+  }
+
+}
