@@ -33,7 +33,7 @@ export class User {
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
 
-  @Column({ name: 'creationuser', type: 'varchar' })
+  @Column({ name: 'profile_photo', type: 'varchar' })
   public profile_photo: string | undefined;
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })

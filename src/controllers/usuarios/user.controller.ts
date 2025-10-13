@@ -88,6 +88,7 @@ export class UserController {
             surname: req.body.surname,
             username: req.body.username,
             birth_date: req.body.birth_date,
+            profile_photo: req.body.profile_photo,
             creationuser: req.body.creationuser,
             creationtimestamp: undefined,
             password: this.authCryptography.decrypt(req.body.password),

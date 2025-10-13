@@ -7,7 +7,7 @@
   "scripts": {
     "test-watch": "jest --watch",
     "build": "tsc -p tsconfig.build.json",
-    "build-dev": "tsc -p tsconfig.json",
+    "build-dev": "tsc -p tsconfig.json ",
     "start": "node ./dist/index.js",
     "postinstall": "node -e \"if (process.env.RENDER === 'true') { require('child_process').execSync('npm install @types/express @types/cors @types/pg @types/jsonwebtoken @types/nodemailer @types/swagger-jsdoc @types/swagger-ui-express', { stdio: 'inherit' }); require('child_process').execSync('mkdir -p ./uploads/games', { stdio: 'inherit' }); }\"",
     "start-dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/index.js\"",

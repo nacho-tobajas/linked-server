@@ -62,6 +62,7 @@ export class UserMapper {
                 : oldUser.username,
             birth_date: userWithChanges.birth_date ?? oldUser.birth_date,
             delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
+            profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
             status: userWithChanges.status ?? oldUser.status,
             creationuser: oldUser.creationuser, // No debe cambiar en la actualización
             creationtimestamp: oldUser.creationtimestamp, // No debe cambiar en la actualización
@@ -85,6 +86,7 @@ export class UserMapper {
             surname: userCreated?.surname,
             username: userCreated?.username,
             birth_date: userCreated?.birth_date,
+            profile_photo: userCreated?.profile_photo,
             creationuser: userCreated?.creationuser,
             creationtimestamp: userCreated?.creationtimestamp,
             password: userCreated?.userauth?.password,
