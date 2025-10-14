@@ -72,7 +72,7 @@ export class User {
   @JoinTable({
     name: 'tat_tatuador_especialidad', // nombre real de la tabla intermedia
     joinColumn: {
-      name: 'id_usuario',              // nombre de la columna FK hacia User
+      name: 'id_tatuador',              // nombre de la columna FK hacia User
       referencedColumnName: 'id',      // el campo PK en User
     },
     inverseJoinColumn: {

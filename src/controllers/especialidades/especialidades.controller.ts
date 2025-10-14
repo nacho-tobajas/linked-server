@@ -72,7 +72,7 @@ export class EspecialidadesController {
     }
   }
 
-  @httpDelete('/:id', validateInputData(deleteEspecialidadValidationRules))
+  @httpDelete('/:id', validateInputData(deleteEspecialidadValidationRules), authenticateToken)
   public async delete(req: Request, res: Response, next: NextFunction) {
     const id = parseInt(req.params.id, 10);
     try {
