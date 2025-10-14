@@ -20,7 +20,7 @@ export class EspecialidadesController {
     this._especialidadesService = especialidadesService;
   }
 
-  @httpGet('/findall', authenticateToken)
+  @httpGet('/findall')
   public async findAll(req: Request, res: Response, next: NextFunction) {
     try {
       const especialidades = await this._especialidadesService.findAll();
@@ -34,7 +34,7 @@ export class EspecialidadesController {
     }
   }
 
-  @httpGet('/:id', validateInputData(getEspecialidadValidationRules), authenticateToken)
+  @httpGet('/:id', validateInputData(getEspecialidadValidationRules))
   public async findOne(req: Request, res: Response, next: NextFunction) {
     const id = parseInt(req.params.id, 10);
     try {
@@ -72,7 +72,7 @@ export class EspecialidadesController {
     }
   }
 
-  @httpDelete('/:id', validateInputData(deleteEspecialidadValidationRules), authenticateToken)
+  @httpDelete('/:id', validateInputData(deleteEspecialidadValidationRules))
   public async delete(req: Request, res: Response, next: NextFunction) {
     const id = parseInt(req.params.id, 10);
     try {

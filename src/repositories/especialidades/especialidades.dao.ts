@@ -1,10 +1,10 @@
 import { Repository } from 'typeorm';
-import { Especialidades } from '../../../src/models/especialidades/especialidades.entity.js';
 import { IBaseRepository } from '../interfaces/IBaseRepository.js';
 import { DatabaseErrorCustom } from '../../middleware/errorHandler/dataBaseError.js';
 import { errorEnumEspecialidades } from '../../middleware/errorHandler/constants/errorConstants.js';
 import { AppDataSource } from '../../config/pg-database/db.js';
 import { injectable } from 'inversify';
+import { Especialidades } from '../../models/especialidades/especialidades.entity.js';
 
 @injectable()
 export class EspecialidadesRepository implements IBaseRepository<Especialidades> {
@@ -17,8 +17,7 @@ export class EspecialidadesRepository implements IBaseRepository<Especialidades>
   async findAll(): Promise<Especialidades[]> {
     try {
       return await this.repository.find({
-        order: { id: 'ASC' },
-        relations: ['tatuadores'], // traer tatuadores relacionados
+        order: { id: 'ASC' }
       });
     } catch (error) {
       console.error(errorEnumEspecialidades.especialidadNotFound, error);
@@ -29,8 +28,7 @@ export class EspecialidadesRepository implements IBaseRepository<Especialidades>
   async findOne(id: number): Promise<Especialidades | undefined> {
     try {
       const especialidad = await this.repository.findOne({
-        where: { id },
-        relations: ['tatuadores'],
+        where: { id }
       });
       return especialidad ?? undefined;
     } catch (error) {
@@ -55,7 +53,7 @@ export class EspecialidadesRepository implements IBaseRepository<Especialidades>
         throw new DatabaseErrorCustom(errorEnumEspecialidades.especialidadNotFound, 404);
       }
       await this.repository.update(id, especialidad);
-      return this.repository.findOneOrFail({ where: { id }, relations: ['tatuadores'] });
+      return this.repository.findOneOrFail({ where: { id } });
     } catch (error) {
       console.error(errorEnumEspecialidades.especialidadNotUpdated, error);
       throw new DatabaseErrorCustom(errorEnumEspecialidades.especialidadNotUpdated, 500);

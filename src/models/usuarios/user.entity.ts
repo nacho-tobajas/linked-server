@@ -67,14 +67,20 @@ export class User {
   public status: boolean | undefined;
 
   @ManyToMany(() => Especialidades, (especialidad) => especialidad.tatuadores, {
-  eager: true
+    eager: true,
   })
-  @JoinTable({ name: 'tat_tatuador_especialidad',
-    joinColumn: { name: "id_usrapl", referencedColumnName: "id" },
-  inverseJoinColumn: { name: "id_especialidad", referencedColumnName: "id" },
-   })
+  @JoinTable({
+    name: 'tat_tatuador_especialidad', // nombre real de la tabla intermedia
+    joinColumn: {
+      name: 'id_usuario',              // nombre de la columna FK hacia User
+      referencedColumnName: 'id',      // el campo PK en User
+    },
+    inverseJoinColumn: {
+      name: 'id_especialidad',         // nombre de la columna FK hacia Especialidades
+      referencedColumnName: 'id',
+    },
+  })
   public especialidades?: Promise<Especialidades[]>;
-
 
   // Relaciones
   public currentRol?: RolApl;
