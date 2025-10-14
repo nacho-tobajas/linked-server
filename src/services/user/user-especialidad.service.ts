@@ -4,19 +4,31 @@ import { Especialidades } from "../../models/especialidades/especialidades.entit
 import { UserRepository } from "../../repositories/usuarios/user.dao.js";
 import { EspecialidadesRepository } from "../../repositories/especialidades/especialidades.dao.js";
 import { ValidationError } from "../../middleware/errorHandler/validationError.js";
+import { UserRolAplService } from "./user-rol-apl.service.js";
 
 @injectable()
 export class UserEspecialidadService {
   constructor(
     @inject(UserRepository) private userRepo: UserRepository,
-    @inject(EspecialidadesRepository) private espRepo: EspecialidadesRepository
+    @inject(EspecialidadesRepository) private espRepo: EspecialidadesRepository,
+    @inject(UserRolAplService) private userRolService: UserRolAplService
   ) {}
+
+   // Verifica si el usuario es tatuador
+  private async checkIsTatuador(user: User) {
+    const roles = await this.userRolService.getAllUserRols(user.id!);
+    if (!roles || !roles.includes( 4 )) { 
+      throw new ValidationError("Solo los usuarios con rol 'Tatuador' pueden tener especialidades.", 403);
+    }
+  }
 
   // Asigna varias especialidades a un tatuador
   async updateUserEspecialidades(userId: number, especialidadIds: number[]): Promise<Especialidades[]> {
     const user = await this.userRepo.findOne(userId);
 
     if (!user) throw new ValidationError("Usuario no encontrado", 404);
+
+    await this.checkIsTatuador(user); // Metodo para solo asignar especialidades a tatuadores
 
     // Cargamos las especialidades actuales como array
     const currentEspecialidades = await user.especialidades ?? [];
@@ -41,6 +53,8 @@ export class UserEspecialidadService {
     const user = await this.userRepo.findOne(userId);
     if (!user) throw new ValidationError("Usuario no encontrado", 404);
 
+    await this.checkIsTatuador(user);
+
     const currentEspecialidades = await user.especialidades ?? [];
 
     const especialidad = await this.espRepo.findOne(especialidadId);
@@ -61,6 +75,8 @@ export class UserEspecialidadService {
     const user = await this.userRepo.findOne(userId);
     if (!user) throw new ValidationError("Usuario no encontrado", 404);
 
+    await this.checkIsTatuador(user);
+
     let currentEspecialidades = await user.especialidades ?? [];
 
     currentEspecialidades = currentEspecialidades.filter(e => e.id !== especialidadId);
@@ -74,6 +90,8 @@ export class UserEspecialidadService {
   async getUserEspecialidades(userId: number): Promise<Especialidades[]> {
     const user = await this.userRepo.findOne(userId);
     if (!user) throw new ValidationError("Usuario no encontrado", 404);
+
+    await this.checkIsTatuador(user);
 
     return await user.especialidades ?? [];
   }
