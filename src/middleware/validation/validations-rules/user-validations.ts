@@ -151,17 +151,36 @@ export const getAllRolsValidationRules = [
     .withMessage('Formato de ID invalido'),
 ];
 
+// Validación para asignar especialidades a un usuario
 export const assignEspecialidadesToUserValidationRules = [
   param("userId")
     .notEmpty()
     .isInt({ min: 1 })
     .withMessage("El ID de usuario es inválido."),
-  body("especialidadId")
-    .notEmpty()
-    .isInt({ min: 1 })
-    .withMessage("El ID de especialidad es inválido."),
+
+  body("especialidadIds")
+    .custom((value) => {
+      if (value === undefined || value === null) {
+        throw new Error("Debe enviar al menos una especialidad.");
+      }
+
+      // Permite un solo ID o un array de IDs
+      const ids = Array.isArray(value) ? value : [value];
+
+      if (ids.length === 0) {
+        throw new Error("Debe enviar al menos una especialidad.");
+      }
+
+      const invalidId = ids.find((id) => !Number.isInteger(id) || id <= 0);
+      if (invalidId !== undefined) {
+        throw new Error("Todos los IDs de especialidad deben ser números enteros mayores a 0.");
+      }
+
+      return true;
+    }),
 ];
 
+// Validación para quitar una especialidad de un usuario
 export const removeEspecialidadesFromUserValidationRules = [
   param("userId")
     .notEmpty()
@@ -173,9 +192,9 @@ export const removeEspecialidadesFromUserValidationRules = [
     .withMessage("El ID de especialidad es inválido."),
 ];
 
+// Validación para obtener las especialidades de un usuario
 export const getUserEspecialidadesValidationRules = [
   param("userId")
     .notEmpty()
     .isInt({ min: 1 })
-    .withMessage("El ID de usuario es inválido."),
-];
+    .withMessage("El ID de usuario es inválido."),];

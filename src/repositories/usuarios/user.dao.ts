@@ -61,7 +61,10 @@ export class UserRepository implements IUserRepository {
 
   async findOne(id: number): Promise<User | undefined> {
     try {
-      const user = await this._userRepo.findOneBy({ id });
+      const user = await this._userRepo.findOne({
+        where: { id },
+        relations: ['especialidades'] 
+      });
       return user ?? undefined;
     } catch (error) {
       console.error(errorEnumUser.userIndicatedNotFound, error);

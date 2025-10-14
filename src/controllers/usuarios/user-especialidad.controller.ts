@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { controller, httpPost, httpGet, httpDelete } from 'inversify-express-utils';
 import { inject } from 'inversify';
-import { authenticateToken } from '../../middleware/auth/authToken.js';
+//import  } from '../../middleware/auth/authToken.js';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
 import { UserService } from '../../services/user/user.service.js';
 import { IUserService } from '../../services/interfaces/user/IUserService.js';
@@ -15,7 +15,7 @@ export class UserEspecialidadController {
   ) {}
 
   // Obtener las especialidades asignadas a un tatuador
-  @httpGet('/:userId/especialidades', authenticateToken)
+  @httpGet('/:userId/especialidades')
   public async getEspecialidadesByTatuador(req: Request, res: Response, next: NextFunction) {
     const userId = parseInt(req.params.userId, 10);
     try {
@@ -27,7 +27,7 @@ export class UserEspecialidadController {
   }
 
   // Asignar una o más especialidades a un tatuador
-  @httpPost('/:userId/asignar-especialidades', validateInputData(assignEspecialidadesToUserValidationRules), authenticateToken)
+  @httpPost('/:userId/asignar-especialidades', validateInputData(assignEspecialidadesToUserValidationRules))
   public async assignEspecialidades(req: Request, res: Response, next: NextFunction) {
     const userId = parseInt(req.params.userId, 10);
     const { especialidadIds } = req.body; // ejemplo: { especialidadIds: [1, 3, 5] }
@@ -41,7 +41,7 @@ export class UserEspecialidadController {
   }
 
   // Quitar una especialidad de un tatuador
-  @httpDelete('/:userId/quitar-especialidad/:especialidadId', authenticateToken)
+  @httpDelete('/:userId/quitar-especialidad/:especialidadId')
   public async removeEspecialidad(req: Request, res: Response, next: NextFunction) {
     const userId = parseInt(req.params.userId, 10);
     const especialidadId = parseInt(req.params.especialidadId, 10);

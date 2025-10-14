@@ -29,8 +29,9 @@ export class UserEspecialidadService {
       nuevasEspecialidades.push(especialidad);
     }
 
+  // Asignamos las nuevas especialidades y guardamos usando el repositorio interno de TypeORM
     user.especialidades = Promise.resolve(nuevasEspecialidades);
-    await this.userRepo.update(userId,user);
+    await (this.userRepo as any)._userRepo.save(user);
 
     return nuevasEspecialidades;
   }
@@ -49,7 +50,7 @@ export class UserEspecialidadService {
     if (!currentEspecialidades.find(e => e.id === especialidad.id)) {
       currentEspecialidades.push(especialidad);
       user.especialidades = Promise.resolve(currentEspecialidades);
-      await this.userRepo.update(userId,user);
+      await (this.userRepo as any)._userRepo.save(user);
     }
 
     return currentEspecialidades;
@@ -64,7 +65,7 @@ export class UserEspecialidadService {
 
     currentEspecialidades = currentEspecialidades.filter(e => e.id !== especialidadId);
     user.especialidades = Promise.resolve(currentEspecialidades);
-    await this.userRepo.update(userId,user);
+    await (this.userRepo as any)._userRepo.save(user);
 
     return currentEspecialidades;
   }

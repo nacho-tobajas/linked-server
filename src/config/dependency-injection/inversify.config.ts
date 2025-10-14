@@ -29,6 +29,8 @@ import { EspecialidadesController } from '../../controllers/especialidades/espec
 import { EspecialidadesRepository } from '../../repositories/especialidades/especialidades.dao.js';
 import { IEspecialidadesService } from '../../services/interfaces/especialidades/IEspecialidades.service.js';
 import { EspecialidadesService } from '../../services/especialidades/especialidades.service.js';
+import { UserEspecialidadController } from '../../controllers/usuarios/user-especialidad.controller.js';
+import { UserEspecialidadService } from '../../services/user/user-especialidad.service.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -39,6 +41,7 @@ container.bind<UserController>(UserController).toSelf();
 container.bind<SupportTicketController>(SupportTicketController).toSelf();
 container.bind<SweItemMenuController>(SweItemMenuController).toSelf();
 container.bind<EspecialidadesController>(EspecialidadesController).toSelf();
+container.bind<UserEspecialidadController>(UserEspecialidadController).toSelf();
 
 // Repositorios
 //container.bind<UserAuthRepository>(UserAuthRepository).toSelf();
@@ -48,6 +51,7 @@ container.bind<UserRolRepository>(UserRolRepository).toSelf();
 container.bind<RolAplRepository>(RolAplRepository).toSelf();
 container.bind<SideMenuRepository>(SideMenuRepository).toSelf();
 container.bind<EspecialidadesRepository>(EspecialidadesRepository).toSelf();
+
 
 // Interfaces
 container.bind<IAuthService>(AuthService).to(AuthService);
@@ -59,6 +63,7 @@ container.bind<ISweItemMenuService>(SweItemMenuService).to(SweItemMenuService);
 container.bind<IUserRepository>(UserRepository).to(UserRepository);
 container.bind<IUserAuthRepository>(UserAuthRepository).toSelf();
 container.bind<IEspecialidadesService>(EspecialidadesService).toSelf();
+container.bind<UserEspecialidadService>(UserEspecialidadService).toSelf();
 
 //mappers
 container.bind<UserMapper>(UserMapper).toSelf();
