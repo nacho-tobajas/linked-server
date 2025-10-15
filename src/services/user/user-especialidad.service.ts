@@ -16,8 +16,19 @@ export class UserEspecialidadService {
 
    // Verifica si el usuario es tatuador
   private async checkIsTatuador(user: User) {
-    const roles = await this.userRolService.getAllUserRols(user.id!);
-    if (!roles || !roles.includes( 4 )) { 
+    const roles: Array<{id: number, nombre: string} | number> = await this.userRolService.getAllUserRols(user.id!)?? [];
+    if (!roles || !roles.length) {
+      throw new ValidationError("Usuario no tiene roles asignados.", 403);
+    }
+
+    // Convertimos todo a IDs numéricos
+    const roleIds = roles.map(r => {
+      if (typeof r === 'number') return r;
+      if (typeof r === 'string') return parseInt(r, 10);
+      return r.id;
+    });
+
+    if (!roleIds.includes(4)) {
       throw new ValidationError("Solo los usuarios con rol 'Tatuador' pueden tener especialidades.", 403);
     }
   }
