@@ -8,6 +8,7 @@ import {
   DeleteDateColumn,
   Relation,
   OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
@@ -61,6 +62,8 @@ export class User {
   @Column({ name: 'status', type: 'boolean' })
   public status: boolean | undefined;
 
+
+  // Relaciones
   public currentRol?: RolApl;
 
   public currentRolId?: number;
@@ -82,8 +85,9 @@ export class User {
     surname?: string,
     username?: string,
     email?: string, // Agregado
-    profile_photo?: string,
     birth_date?: Date,
+    profile_photo?: string,
+    especialidad?: string,
     delete_date?: Date,
     creationuser?: string,
     creationtimestamp?: Date,

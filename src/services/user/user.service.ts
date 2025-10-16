@@ -135,6 +135,11 @@ export class UserService implements IUserService {
       throw new ValidationError('Usuario no encontrado', 400);
     }
 
+    // Evita sobreescribir la imagen existente si no se subió una nueva
+    if (!user.profile_photo) {
+      user.profile_photo = oldUser.profile_photo;
+    }
+
     const updatedUser = await this._userMapper.convertToEntityOnUpdate(id, user, oldUser);
 
     const userOutput = this._userRepository.update(id, updatedUser)
