@@ -145,4 +145,24 @@ export class UserRepository implements IUserRepository {
     }
   }
 
+  async findAllTatuadoresConEspecialidades(): Promise<User[]> {
+    const ROL_TATUADOR_ID = 4; // Asumimos que 4 es el ID de Tatuador
+
+    try {
+      return await this._userRepo.createQueryBuilder('user')
+        // Unimos con la tabla de roles de usuario
+        .innerJoin('user.userRolApl', 'userRolApl')
+        // Unimos y cargamos las especialidades
+        .leftJoinAndSelect('user.especialidades', 'especialidades')
+        // Filtramos solo por el rol de tatuador
+        .where('userRolApl.idRolapl = :rolId', { rolId: ROL_TATUADOR_ID })
+        // Opcional: Traer también la info del rol
+        .leftJoinAndSelect('userRolApl.rolApl', 'rolApl')
+        .getMany();
+    } catch (error) {
+      console.error('Error al buscar tatuadores con especialidades', error);
+      throw new DatabaseErrorCustom('Error al buscar tatuadores', 500);
+    }
+  }
+
 }

@@ -5,7 +5,7 @@ import { IPasswordService } from "../../services/interfaces/auth/IPasswordServic
 import { ValidationError } from "../../middleware/errorHandler/validationError.js";
 import { UserAuth } from "../../models/usuarios/user-auth.entity.js";
 import { RolApl } from "../../models/roles/rol-apl.entity.js";
-
+import { Especialidades } from "../../models/especialidades/especialidades.entity.js";
 
 @injectable()
 export class UserMapper {
@@ -77,7 +77,7 @@ export class UserMapper {
 
     async convertToDto(userCreated: User, rolAsigned: RolApl): Promise<UserDto> {
 
-        const UserDto: UserDto = {
+        const userDto: UserDto = {
             idUser: userCreated?.id,
             idRolApl: userCreated?.currentRolId, //Nuevo
             email: userCreated?.email, // Agregado
@@ -92,9 +92,10 @@ export class UserMapper {
             password: userCreated?.userauth?.password,
             status: userCreated?.status,
             delete_date: userCreated?.delete_date,
+            especialidades: await userCreated.especialidades,
         };
 
-        return UserDto
+        return userDto
 
     }
 }

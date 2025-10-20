@@ -62,6 +62,21 @@ export class UserController {
         }
     };
 
+    @httpGet('/tatuadores')
+    public async findAllTatuadores(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tatuadores = await this._userService.findAllTatuadores();
+      
+      if (tatuadores.length > 0) {
+        res.status(200).json(tatuadores);
+      } else {
+        res.status(404).json({ message: 'No se han encontrado tatuadores' });
+      }
+    } catch (error) {
+      next(error);
+    }
+    }
+
     @httpGet('/:id', validateInputData(getUserValidationRules))
     public async findOne(req: Request, res: Response, next: NextFunction) {
         const id = parseInt(req.params.id, 10);
@@ -304,6 +319,7 @@ export class UserController {
         }
 
     }
+
 
 
 }

@@ -1,3 +1,5 @@
+import { Especialidades } from "../../models/especialidades/especialidades.entity.js";
+
 export class UserDto {
     idUser: number | undefined;
     idRolApl: number | undefined; //Nuevo
@@ -17,6 +19,7 @@ export class UserDto {
     modificationtimestamp?: Date | undefined;
     resetPasswordToken?: string | undefined;
     resetPasswordExpires?: Date | undefined;
+    especialidades?: Especialidades[];
 
     constructor(
         idUser?: number,
