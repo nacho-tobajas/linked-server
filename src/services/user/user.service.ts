@@ -178,6 +178,34 @@ export class UserService implements IUserService {
     return userUpdated;
   }
 
+  async findAllTatuadores(): Promise<UserDto[]> {
+    // 1. Llama al nuevo método del repositorio
+    const usersList = await this._userRepository.findAllTatuadoresConEspecialidades();
+
+    let userOutPutList: UserDto[] = [];
+
+    if (!usersList || usersList.length === 0) return userOutPutList;
+
+    // 2. Reutilizamos la misma lógica de mapeo que ya tenías en findAll
+    userOutPutList = await Promise.all(
+      usersList.map(async (user) => {
+        // Gracias a la consulta, user.userRolApl ya viene cargado (no es N+1)
+        const userRolAplList = (await user.userRolApl)?.map((c) => c);
+        
+        const currentRol = await this._userRolAplService.SearchUserCurrentRol(
+          userRolAplList!
+        );
+
+        // El mapper debería tomar user.especialidades (que ya viene cargado)
+        // y convertirlo en parte del DTO.
+        const userOutput = await this._userMapper.convertToDto(user, currentRol!);
+        return userOutput;
+      })
+    );
+
+    return userOutPutList;
+  }
+
 }
 
 

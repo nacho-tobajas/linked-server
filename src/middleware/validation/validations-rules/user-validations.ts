@@ -167,17 +167,14 @@ export const assignEspecialidadesToUserValidationRules = [
       // Permite un solo ID o un array de IDs
       const ids = Array.isArray(value) ? value : [value];
 
-      if (ids.length === 0) {
-        throw new Error("Debe enviar al menos una especialidad.");
-      }
-
       const invalidId = ids.find((id) => !Number.isInteger(id) || id <= 0);
       if (invalidId !== undefined) {
         throw new Error("Todos los IDs de especialidad deben ser números enteros mayores a 0.");
       }
 
       return true;
-    }),
+    })
+    .withMessage('Formato de IDs de especialidad inválido o falta el campo.'),
 ];
 
 // Validación para quitar una especialidad de un usuario
