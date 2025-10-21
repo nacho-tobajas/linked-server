@@ -29,7 +29,7 @@ export class UserMapper {
         userToCreate.realname = newUser.realname;
         userToCreate.surname = newUser.surname;
         userToCreate.username = newUser.username;
-        userToCreate.email = newUser.email; // Agregado
+        userToCreate.email = newUser.email; 
         userToCreate.resetPasswordToken = undefined;
         userToCreate.resetPasswordExpires = undefined;
         userToCreate.birth_date = newUser.birth_date;
@@ -46,10 +46,11 @@ export class UserMapper {
 
     }
 
-    async convertToEntityOnUpdate(id: number, userWithChanges: User, oldUser: User) {
+    async convertToEntityOnUpdate(id: number, userWithChanges: User, oldUser: User):Promise<Partial<User>> {
+        const estudioUpdate = userWithChanges.estudio !== undefined ? userWithChanges.estudio : oldUser.estudio;
+        const fechaInicioUpdate = userWithChanges.fecha_inicio_actividad !== undefined ? userWithChanges.fecha_inicio_actividad : oldUser.fecha_inicio_actividad;
 
-        const userToUpdate: User = {
-            id: oldUser.id,
+        const userToUpdate: Partial<User> = {
             realname: userWithChanges.realname && userWithChanges.realname.trim() !== ''
                 ? userWithChanges.realname
                 : oldUser.realname,
@@ -62,40 +63,72 @@ export class UserMapper {
                 : oldUser.username,
                 profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
             birth_date: userWithChanges.birth_date ?? oldUser.birth_date,
+            estudio: estudioUpdate, 
+            fecha_inicio_actividad: fechaInicioUpdate,
             delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
             status: userWithChanges.status ?? oldUser.status,
-            creationuser: oldUser.creationuser, // No debe cambiar en la actualización
-            creationtimestamp: oldUser.creationtimestamp, // No debe cambiar en la actualización
             modificationuser: userWithChanges.modificationuser ?? oldUser?.modificationuser,
             modificationtimestamp: new Date(),
-            resetPasswordToken: undefined,
-            resetPasswordExpires: undefined
+
         };
         return userToUpdate;
 
     }
 
-    async convertToDto(userCreated: User, rolAsigned: RolApl): Promise<UserDto> {
+    async convertToDto(entity: User, rolAsigned: RolApl): Promise<UserDto> {
 
-        const userDto: UserDto = {
-            idUser: userCreated?.id,
-            idRolApl: userCreated?.currentRolId, //Nuevo
-            email: userCreated?.email, // Agregado
-            rolDesc: rolAsigned?.description,
-            realname: userCreated?.realname,
-            surname: userCreated?.surname,
-            username: userCreated?.username,
-                profile_photo: userCreated?.profile_photo,
-            birth_date: userCreated?.birth_date,
-            creationuser: userCreated?.creationuser,
-            creationtimestamp: userCreated?.creationtimestamp,
-            password: userCreated?.userauth?.password,
-            status: userCreated?.status,
-            delete_date: userCreated?.delete_date,
-            especialidades: await userCreated.especialidades,
-        };
+        const userDto = new UserDto(); 
 
-        return userDto
+        userDto.idUser = entity.id;
+        userDto.idRolApl = rolAsigned?.id; 
+        userDto.email = entity.email;
+        userDto.rolDesc = rolAsigned?.description;
+        userDto.realname = entity.realname;
+        userDto.surname = entity.surname;
+        userDto.username = entity.username;
+        userDto.profile_photo = entity.profile_photo;
+        userDto.birth_date = entity.birth_date;
+        userDto.status = entity.status;
 
+        userDto.estudio = entity.estudio;
+        userDto.fecha_inicio_actividad = entity.fecha_inicio_actividad;
+
+
+        //Calculo de antiguedad
+        if (entity.fecha_inicio_actividad) {
+            const hoy = new Date();
+            
+            const inicio = typeof entity.fecha_inicio_actividad === 'string'
+                         ? new Date(entity.fecha_inicio_actividad)
+                         : entity.fecha_inicio_actividad;
+
+            if (inicio instanceof Date && !isNaN(inicio.getTime())) { 
+                let antiguedadEnAnios = hoy.getFullYear() - inicio.getFullYear();
+                const mesActual = hoy.getMonth();
+                const diaActual = hoy.getDate();
+                const mesInicio = inicio.getMonth();
+                const diaInicio = inicio.getDate();
+
+                if (mesActual < mesInicio || (mesActual === mesInicio && diaActual < diaInicio)) {
+                    antiguedadEnAnios--;
+                }
+                userDto.antiguedad = Math.max(0, antiguedadEnAnios); 
+            } else {
+                 userDto.antiguedad = undefined; 
+            }
+        } else {
+            userDto.antiguedad = undefined; 
+        }
+        
+
+
+        // --- Mapping Especialidades ---
+         if (Array.isArray(entity.especialidades)) {
+             userDto.especialidades = entity.especialidades;
+         } else {
+             userDto.especialidades = undefined; 
+         }
+
+        return userDto; 
     }
 }

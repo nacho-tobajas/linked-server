@@ -29,37 +29,43 @@ export class User {
   @Column({ name: 'surname', type: 'varchar' })
   public surname: string | undefined;
 
-  @Column({ name: 'username', type: 'varchar' })
+  @Column({ name: 'username', type: 'varchar', unique: true})
   public username: string | undefined;
 
-  @Column({ name: 'email', type: 'varchar', length: 255 }) //Agregado
+  @Column({ name: 'email', type: 'varchar', length: 255, unique: true}) 
   public email: string | undefined;
 
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | undefined;
 
-  @Column({ name: 'profile_photo', type: 'varchar' })
-  public profile_photo: string | undefined;;
+  @Column({ name: 'profile_photo', type: 'varchar', nullable: true})
+  public profile_photo: string | undefined;
+
+  @Column({ name: 'estudio', type: 'varchar', length: 100, nullable: true })
+  public estudio: string | undefined; 
+
+  @Column({ name: 'fecha_inicio_actividad', type: 'date', nullable: true })
+  public fecha_inicio_actividad: Date | undefined; 
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
   public delete_date: Date | undefined;
 
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser: string | undefined;
-        //Nuevo
+
   @Column({ name: 'reset_password_token', type: 'varchar', length: 255 })
   public resetPasswordToken: string | undefined;
 
   @Column({name: 'reset_password_expires', type: 'timestamp'})
   public resetPasswordExpires: Date | undefined; 
-        //
-  @CreateDateColumn()
+        
+  @CreateDateColumn({ name: 'creationtimestamp' })
   public creationtimestamp: Date | undefined;
 
   @Column({ name: 'modificationuser', type: 'varchar', nullable: true })
   public modificationuser: string | undefined;
 
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn({ name: 'modificationtimestamp', nullable: true })
   public modificationtimestamp: Date | undefined;
 
 

@@ -11,22 +11,25 @@ export class UserDto {
     profile_photo: string | undefined;
     birth_date: Date | undefined;
     delete_date: Date | undefined;
-    creationuser: string | undefined;
-    creationtimestamp: Date | undefined;
-    password: string | undefined;
+    creationuser?: string | undefined;
+    creationtimestamp?: Date | undefined;
+    password?: string | undefined;
     status: boolean | undefined;
     modificationuser?: string | undefined;
     modificationtimestamp?: Date | undefined;
     resetPasswordToken?: string | undefined;
     resetPasswordExpires?: Date | undefined;
     especialidades?: Especialidades[];
+    estudio?: string; 
+    fecha_inicio_actividad?: Date; 
+    antiguedad?: number;
 
     constructor(
         idUser?: number,
-        idRolApl?: number, //Nuevo
-        email?: string, //Nuevo
-        resetPasswordToken?:string, //Nuevo
-        resetPassswordExpires?:Date, //Nuevo
+        idRolApl?: number, 
+        email?: string, 
+        resetPasswordToken?:string, 
+        resetPassswordExpires?:Date, 
         rolDesc?: string,
         realname?: string,
         surname?: string,
@@ -43,10 +46,10 @@ export class UserDto {
 
     ) {
         this.idUser = idUser;
-        this.idRolApl = idRolApl; //Nuevo
-        this.email = email; //Nuevo
-        this.resetPasswordToken = resetPasswordToken; //Nuevo
-        this.resetPasswordExpires = resetPassswordExpires; //Nuevo
+        this.idRolApl = idRolApl;
+        this.email = email; 
+        this.resetPasswordToken = resetPasswordToken; 
+        this.resetPasswordExpires = resetPassswordExpires; 
         this.rolDesc = rolDesc;
         this.realname = realname;
         this.surname = surname;
