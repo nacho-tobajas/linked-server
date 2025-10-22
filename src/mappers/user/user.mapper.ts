@@ -47,31 +47,54 @@ export class UserMapper {
     }
 
     async convertToEntityOnUpdate(id: number, userWithChanges: User, oldUser: User):Promise<Partial<User>> {
-        const estudioUpdate = userWithChanges.estudio !== undefined ? userWithChanges.estudio : oldUser.estudio;
-        const fechaInicioUpdate = userWithChanges.fecha_inicio_actividad !== undefined ? userWithChanges.fecha_inicio_actividad : oldUser.fecha_inicio_actividad;
+        // --- Lógica para campos de texto opcionales (realname, surname, estudio) ---
+    const getTextValue = (newValue: string | null | undefined, oldValue: string | null | undefined): string | null | undefined => {
+        if (newValue === '') {
+            return null; // Si llega '', guardar NULL
+        } else if (newValue !== undefined) {
+            return newValue; // Si llega un valor (incluido null), usarlo
+        } else {
+            return oldValue; // Si no llega (undefined), mantener el antiguo
+        }
+    };
 
-        const userToUpdate: Partial<User> = {
-            realname: userWithChanges.realname && userWithChanges.realname.trim() !== ''
-                ? userWithChanges.realname
-                : oldUser.realname,
-            email: userWithChanges.email ?? oldUser.email,
-            surname: userWithChanges.surname && userWithChanges.surname.trim() !== ''
-                ? userWithChanges.surname
-                : oldUser.surname,
-            username: userWithChanges.username && userWithChanges.username.trim() !== ''
-                ? userWithChanges.username
-                : oldUser.username,
-                profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
-            birth_date: userWithChanges.birth_date ?? oldUser.birth_date,
-            estudio: estudioUpdate, 
-            fecha_inicio_actividad: fechaInicioUpdate,
-            delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
-            status: userWithChanges.status ?? oldUser.status,
-            modificationuser: userWithChanges.modificationuser ?? oldUser?.modificationuser,
-            modificationtimestamp: new Date(),
+    // --- Lógica para campos de fecha opcionales (birth_date, fecha_inicio_actividad) ---
+    const getDateValue = (newValue: Date | string | null | undefined, oldValue: Date | null | undefined): Date | null | undefined => {
+        if (newValue === null) {
+            return null; // Si llega null explícito, guardar NULL
+        } else if (newValue !== undefined) {
+            // Intenta convertir a fecha si llega algo, si no es válido o es '', devuelve null
+            const date = newValue ? new Date(newValue) : null;
+            return (date instanceof Date && !isNaN(date.getTime())) ? date : null; // Guarda fecha válida o NULL
+        } else {
+            return oldValue; // Si no llega (undefined), mantener el antiguo
+        }
+    };
 
-        };
-        return userToUpdate;
+    const userToUpdate: Partial<User> = {
+      // Campos obligatorios o con lógica diferente (username, email, status)
+      username: userWithChanges.username?.trim() ? userWithChanges.username : oldUser.username, // Asumo username no puede ser null
+      email: userWithChanges.email ?? oldUser.email, // Asumo email no puede ser null
+      status: userWithChanges.status ?? oldUser.status,
+
+      // Campos opcionales usando las funciones helper
+      realname: getTextValue(userWithChanges.realname, oldUser.realname),
+      surname: getTextValue(userWithChanges.surname, oldUser.surname),
+      estudio: getTextValue(userWithChanges.estudio, oldUser.estudio),
+      birth_date: getDateValue(userWithChanges.birth_date, oldUser.birth_date),
+      fecha_inicio_actividad: getDateValue(userWithChanges.fecha_inicio_actividad, oldUser.fecha_inicio_actividad),
+
+      // Otros campos
+      profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
+      delete_date: userWithChanges.delete_date ?? oldUser.delete_date, // O lógica específica si necesaria
+      modificationuser: userWithChanges.modificationuser, // Asumiendo que viene del servicio/contexto
+      modificationtimestamp: new Date(),
+    };
+
+    // Limpiar propiedades undefined para evitar problemas con TypeORM (opcional pero seguro)
+    Object.keys(userToUpdate).forEach(key => userToUpdate[key as keyof Partial<User>] === undefined && delete userToUpdate[key as keyof Partial<User>]);
+
+    return userToUpdate;
 
     }
 
@@ -89,7 +112,7 @@ export class UserMapper {
         userDto.profile_photo = entity.profile_photo;
         userDto.birth_date = entity.birth_date;
         userDto.status = entity.status;
-
+        userDto.creationtimestamp = entity.creationtimestamp;
         userDto.estudio = entity.estudio;
         userDto.fecha_inicio_actividad = entity.fecha_inicio_actividad;
 

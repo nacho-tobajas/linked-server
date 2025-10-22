@@ -5,11 +5,11 @@ export class UserDto {
     idRolApl: number | undefined; //Nuevo
     email: string | undefined; //Nuevo
     rolDesc: string | undefined;
-    realname: string | undefined;
-    surname: string | undefined;
+    realname: string | null | undefined;
+    surname: string | null | undefined;
     username: string | undefined;
-    profile_photo: string | undefined;
-    birth_date: Date | undefined;
+    profile_photo: string | null | undefined;
+    birth_date: Date | null | undefined;
     delete_date: Date | undefined;
     creationuser?: string | undefined;
     creationtimestamp?: Date | undefined;
@@ -20,9 +20,9 @@ export class UserDto {
     resetPasswordToken?: string | undefined;
     resetPasswordExpires?: Date | undefined;
     especialidades?: Especialidades[];
-    estudio?: string; 
-    fecha_inicio_actividad?: Date; 
-    antiguedad?: number;
+    estudio?: string | null; 
+    fecha_inicio_actividad?: Date | null; 
+    antiguedad?: number | undefined;
 
     constructor(
         idUser?: number,

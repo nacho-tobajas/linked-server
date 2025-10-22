@@ -24,10 +24,10 @@ export class User {
   public id: number | undefined;
 
   @Column({ name: 'realname', type: 'varchar' })
-  public realname: string | undefined;
+  public realname: string | null | undefined;
 
   @Column({ name: 'surname', type: 'varchar' })
-  public surname: string | undefined;
+  public surname: string | null | undefined;
 
   @Column({ name: 'username', type: 'varchar', unique: true})
   public username: string | undefined;
@@ -36,19 +36,19 @@ export class User {
   public email: string | undefined;
 
   @Column({ name: 'birth_date', type: 'timestamp' })
-  public birth_date: Date | undefined;
+  public birth_date: Date | null | undefined;
 
   @Column({ name: 'profile_photo', type: 'varchar', nullable: true})
-  public profile_photo: string | undefined;
+  public profile_photo: string | null | undefined;
 
   @Column({ name: 'estudio', type: 'varchar', length: 100, nullable: true })
-  public estudio: string | undefined; 
+  public estudio: string | null | undefined; 
 
   @Column({ name: 'fecha_inicio_actividad', type: 'date', nullable: true })
-  public fecha_inicio_actividad: Date | undefined; 
+  public fecha_inicio_actividad: Date | null  | undefined; 
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
-  public delete_date: Date | undefined;
+  public delete_date: Date | null | undefined;
 
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser: string | undefined;
