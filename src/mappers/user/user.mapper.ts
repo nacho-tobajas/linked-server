@@ -47,47 +47,41 @@ export class UserMapper {
     }
 
     async convertToEntityOnUpdate(id: number, userWithChanges: User, oldUser: User):Promise<Partial<User>> {
-        // --- Lógica para campos de texto opcionales (realname, surname, estudio) ---
     const getTextValue = (newValue: string | null | undefined, oldValue: string | null | undefined): string | null | undefined => {
         if (newValue === '') {
-            return null; // Si llega '', guardar NULL
+            return null; 
         } else if (newValue !== undefined) {
-            return newValue; // Si llega un valor (incluido null), usarlo
+            return newValue; 
         } else {
-            return oldValue; // Si no llega (undefined), mantener el antiguo
+            return oldValue; 
         }
     };
 
-    // --- Lógica para campos de fecha opcionales (birth_date, fecha_inicio_actividad) ---
+
     const getDateValue = (newValue: Date | string | null | undefined, oldValue: Date | null | undefined): Date | null | undefined => {
         if (newValue === null) {
-            return null; // Si llega null explícito, guardar NULL
+            return null; 
         } else if (newValue !== undefined) {
-            // Intenta convertir a fecha si llega algo, si no es válido o es '', devuelve null
             const date = newValue ? new Date(newValue) : null;
-            return (date instanceof Date && !isNaN(date.getTime())) ? date : null; // Guarda fecha válida o NULL
+            return (date instanceof Date && !isNaN(date.getTime())) ? date : null; 
         } else {
-            return oldValue; // Si no llega (undefined), mantener el antiguo
+            return oldValue; 
         }
     };
 
     const userToUpdate: Partial<User> = {
-      // Campos obligatorios o con lógica diferente (username, email, status)
-      username: userWithChanges.username?.trim() ? userWithChanges.username : oldUser.username, // Asumo username no puede ser null
-      email: userWithChanges.email ?? oldUser.email, // Asumo email no puede ser null
+      username: userWithChanges.username?.trim() ? userWithChanges.username : oldUser.username,
+      email: userWithChanges.email ?? oldUser.email, 
       status: userWithChanges.status ?? oldUser.status,
-
-      // Campos opcionales usando las funciones helper
       realname: getTextValue(userWithChanges.realname, oldUser.realname),
       surname: getTextValue(userWithChanges.surname, oldUser.surname),
       estudio: getTextValue(userWithChanges.estudio, oldUser.estudio),
       birth_date: getDateValue(userWithChanges.birth_date, oldUser.birth_date),
       fecha_inicio_actividad: getDateValue(userWithChanges.fecha_inicio_actividad, oldUser.fecha_inicio_actividad),
 
-      // Otros campos
       profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
-      delete_date: userWithChanges.delete_date ?? oldUser.delete_date, // O lógica específica si necesaria
-      modificationuser: userWithChanges.modificationuser, // Asumiendo que viene del servicio/contexto
+      delete_date: userWithChanges.delete_date ?? oldUser.delete_date, 
+      modificationuser: userWithChanges.modificationuser, 
       modificationtimestamp: new Date(),
     };
 
