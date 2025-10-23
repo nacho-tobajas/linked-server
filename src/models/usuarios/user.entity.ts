@@ -9,10 +9,12 @@ import {
   Relation,
   OneToMany,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
 import { RolApl } from '../roles/rol-apl.entity.js';
+import { TatuajeImagen } from '../tatuador/tat_biblioteca_tatuador.entity.js';
 
 @Entity('swe_usrapl') // El nombre de la tabla en la base de datos
 export class User {
@@ -78,6 +80,17 @@ export class User {
 
   @OneToMany(() => UserRolApl, (userRolApl) => userRolApl.user, { lazy: true })
   public userRolApl?: Promise<UserRolApl[]>;
+
+  @OneToMany(() => TatuajeImagen, (tatuador) => tatuador.tatuador, { lazy: true })
+  public idImagenBiblioteca?: Promise<TatuajeImagen[]>;
+
+  @ManyToMany(() => TatuajeImagen, (tatuajeImagen) => tatuajeImagen.favoritoDe)
+  @JoinTable({
+    name: 'tat_imagen_fav',
+    joinColumn: { name: 'id_user', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'id_imagen', referencedColumnName: 'id' },
+  })
+  public imagenesFavoritas?: TatuajeImagen[];
 
   constructor(
     id?: number,
