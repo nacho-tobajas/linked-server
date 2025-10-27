@@ -7,71 +7,89 @@ import {
   ManyToOne,
   OneToMany,
   Relation,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../usuarios/user.entity.js';
 import { ImagenRef } from '../imagen-ref/imagen-ref.entity.js';
+import { TurnoTatuador } from '../turno-tatuador/turno-tatuador.entity.js';
+import { EstadoTurno } from '../enums/estado-turno.enum.js';
 
-@Entity('tat_turno_sesion') 
+@Entity('tat_turno_sesion')
 export class TurnoSesion {
+
   @PrimaryGeneratedColumn()
-  public id: number | undefined;
+  public id?: number ;
 
-  @Column({ name: 'fecha', type: 'date' })
-  public fecha: Date | undefined;
+  // --- Cliente ---
+  @ManyToOne(() => User, (user) => user.turnosCliente)
+  @JoinColumn({ name: "id_cliente" })
+  public cliente?: Relation<User>;
 
-  @Column({ name: 'hora', type: 'time' })
-  public hora: string | undefined;
+  // --- Tatuadores ---
+  @OneToMany(() => TurnoTatuador, (tt) => tt.turnoSesion, { cascade: true })
+  public tatuadoresAsignados?: Relation<TurnoTatuador[]>;
 
-  @Column({ name: 'id_cliente', type: 'integer' })
-  public id_cliente: number | undefined;
+  @Column({ name: 'fecha_hora_inicio', type: 'timestamp' })
+  public fecha_hora_inicio?: Date;
 
-  @ManyToOne(() => User, (user) => user.turnosCliente, { eager: true })
-  public cliente!: Relation<User>;
+  @Column({ name: 'fecha_hora_fin', type: 'timestamp' })
+  public fecha_hora_fin?: Date;
 
-  @ManyToOne(() => User, (user) => user.turnosTatuador, { eager: true })
-  public tatuador!: Relation<User>;
+  @Column({
+    type: 'enum',
+    enum: EstadoTurno,
+    default: EstadoTurno.PENDIENTE,
+  })
+  public estado?: EstadoTurno;
 
+  // --- Detalles del Cliente ---
+  @Column({ name: 'descripcion_cliente', type: 'varchar', length: 1000, nullable: true })
+  public descripcion_cliente?: string;
+
+  // --- Imágenes (Tu relación 1:N) ---
+  @OneToMany(() => ImagenRef, (imagen) => imagen.turnoSesion, { cascade: true })
+  public imagenes?: Relation<ImagenRef[]>;
+
+  // --- Campos de Auditoría (como los tenías) ---
   @Column({ name: 'creationuser', type: 'varchar' })
-  public creationuser: string | undefined;
+  public creationuser?: string;
 
-  @CreateDateColumn()
-  public creationtimestamp: Date | undefined;
+  @CreateDateColumn({ name: 'creationtimestamp' })
+  public creationtimestamp?: Date;
 
   @Column({ name: 'modificationuser', type: 'varchar', nullable: true })
-  public modificationuser: string | undefined;
+  public modificationuser?: string;
 
   @UpdateDateColumn({ name: 'modificationtimestamp', nullable: true })
-  public modificationtimestamp: Date | undefined;
+  public modificationtimestamp?: Date;
 
 
-  @Column({ name: 'status', type: 'boolean' })
-  public status: boolean | undefined;
 
-  @OneToMany(() => ImagenRef, (imagen) => imagen.turnoSesion, { cascade: true })
-  public imagenes?: ImagenRef[]
-
-
-  constructor(
-    id?: number,
-    fecha?: Date,
-    hora?: string,
-    cliente?: Relation<User>,
-    tatuador?: Relation<User>,
+  /*constructor(
+ id: number,
+    cliente: Relation<User>,
+    fecha_hora_inicio: Date,
+    fecha_hora_fin: Date,
+    tatuadoresAsignados: Relation<TurnoTatuador[]>,
+    estado: EstadoTurno, 
+    descripcion_cliente: string,
+    imagenes: Relation<ImagenRef[]>,
     creationuser?: string,
     creationtimestamp?: Date,
     modificationuser?: string,
     modificationtimestamp?: Date,
-    status?: boolean,
   ) {
     this.id = id;
-    this.fecha = fecha ?? new Date();
-    this.hora = hora ?? '00:00:00';
-    this.cliente = cliente!;
-    this.tatuador = tatuador!;
+    this.cliente = cliente;
+    this.fecha_hora_inicio = fecha_hora_inicio;
+    this.fecha_hora_fin = fecha_hora_fin;
+    this.tatuadoresAsignados = tatuadoresAsignados;
+    this.estado = estado;
+    this.descripcion_cliente = descripcion_cliente;
+    this.imagenes = imagenes; 
     this.creationuser = creationuser ?? 'system';
-    this.creationtimestamp = creationtimestamp;
-    this.modificationuser = modificationuser;
-    this.modificationtimestamp = modificationtimestamp;
-    this.status = status ?? true;
-  }
+    this.creationtimestamp = creationtimestamp!; 
+    this.modificationuser = modificationuser!;
+    this.modificationtimestamp = modificationtimestamp!;
+  }*/
 }

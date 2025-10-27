@@ -17,6 +17,7 @@ import { RolApl } from '../roles/rol-apl.entity.js';
 import { SupportTicket } from '../support-ticket/support-ticket.entity.js';
 import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
 import { Especialidades } from '../../models/especialidades/especialidades.entity.js';
+import { TurnoTatuador } from '../turno-tatuador/turno-tatuador.entity.js';
 
 @Entity('swe_usrapl') // El nombre de la tabla en la base de datos
 export class User {
@@ -109,12 +110,13 @@ export class User {
 
   public ticketlist?: Promise<SupportTicket[]>
 
-  // Relación con Turnos (puede ser cliente o tatuador)
+// Turnos donde este usuario es el CLIENTE
   @OneToMany(() => TurnoSesion, (turno) => turno.cliente)
-  public turnosCliente?: TurnoSesion[];
+  public turnosCliente?: Relation<TurnoSesion[]>;
 
-  @OneToMany(() => TurnoSesion, (turno) => turno.tatuador)
-  public turnosTatuador?: TurnoSesion[];
+  // Turnos donde este usuario es el TATUADOR 
+  @OneToMany(() => TurnoTatuador, (tt) => tt.tatuador)
+  public turnosTatuador?: Relation<TurnoTatuador[]>;
 
   constructor(
     id?: number,
@@ -130,6 +132,9 @@ export class User {
     modificationuser?: string,
     modificationtimestamp?: Date,
     status?: boolean,
+    turnosCliente?: TurnoSesion[],
+    turnosTatuador?: TurnoTatuador[],
+
   ) {
     this.id = id;
     this.realname = realname;
@@ -144,6 +149,8 @@ export class User {
     this.modificationuser = modificationuser;
     this.modificationtimestamp = modificationtimestamp;
     this.status = status ?? true;
+    this.turnosCliente = turnosCliente;
+    this.turnosTatuador = turnosTatuador;
   }
 
 
