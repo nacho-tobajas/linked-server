@@ -1,4 +1,4 @@
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, In, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { AppDataSource } from '../../config/pg-database/db.js';
 import { injectable } from 'inversify';
 import { TurnoTatuador } from '../../models/turno-tatuador/turno-tatuador.entity.js';
@@ -36,6 +36,32 @@ export class TurnoTatuadorRepository implements ITurnoTatuadorRepository {
         } catch (error) {
             console.error("Error al validar solapamiento: ", error);
             throw new DatabaseErrorCustom('Error al validar disponibilidad', 500);
+        }
+    }
+
+    /**
+     * Busca asignaciones (turnos) activas para un tatuador en un rango de fechas.
+     */
+    async findReservadosEnRango(tatuadorId: number, fechaInicio: Date, fechaFin: Date): Promise<TurnoTatuador[]> {
+        try {
+            // Esta es la consulta específica que tu AgendaService necesita
+            return await this._repository.find({
+                where: {
+                    tatuador: { id: tatuadorId },
+                    turnoSesion: {
+                        estado: In([EstadoTurno.PENDIENTE, EstadoTurno.CONFIRMADA]),
+                        // Filtramos por el rango de fechas (el día completo)
+                        fecha_hora_inicio: MoreThanOrEqual(fechaInicio),
+                        fecha_hora_fin: LessThanOrEqual(fechaFin)
+                    }
+                },
+                relations: {
+                    turnoSesion: true // Cargamos la info del turno
+                }
+            });
+        } catch (error) {
+            console.error("Error al buscar turnos reservados en rango: ", error);
+            throw new DatabaseErrorCustom('Error al buscar turnos reservados', 500);
         }
     }
 

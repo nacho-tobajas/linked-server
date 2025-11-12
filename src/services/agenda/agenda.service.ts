@@ -5,17 +5,81 @@ import { IHorarioHabitualRepository } from "../../repositories/interfaces/IHorar
 import { HorarioHabitualRepository } from "../../repositories/agenda/horario-habitual.dao.js";
 import { HorarioHabitual } from "../../models/agenda/horario.entity.js";
 import { DatabaseErrorCustom } from "../../middleware/errorHandler/dataBaseError.js";
-
+import { ITurnoTatuadorRepository } from "../../repositories/interfaces/ITurnoTatuadorRepository.js";
+import { TurnoTatuadorRepository } from "../../repositories/agenda/turno-tatuador.dao.js";
 @injectable()
 export class AgendaService implements IAgendaService {
 
     private _horarioRepo: IHorarioHabitualRepository;
-
+    private _turnoTatuadorRepo: ITurnoTatuadorRepository;
     constructor(
-        @inject(HorarioHabitualRepository) horarioRepo: IHorarioHabitualRepository
+        @inject(HorarioHabitualRepository) horarioRepo: IHorarioHabitualRepository,
+        @inject(TurnoTatuadorRepository) turnoTatuadorRepo: ITurnoTatuadorRepository
     ) {
         this._horarioRepo = horarioRepo;
+        this._turnoTatuadorRepo = turnoTatuadorRepo;
     }
+
+    public async getSlotsDisponiblesParaDia(tatuadorId: number, fecha: Date): Promise<string[]> {
+
+        const diaSemana = fecha.getDay(); 
+        const fechaISO = fecha.toISOString().split('T')[0]; 
+
+        // Obtener el Horario Habitual 
+        const horariosHabituales = await this._horarioRepo.findByTatuadorId(tatuadorId);
+        const horarioDelDia = horariosHabituales.find(h => h.dia_semana === diaSemana);
+
+        if (!horarioDelDia) {
+            return []; 
+        }
+
+        // Obtener turnos YA RESERVADOS (SOLO PARA ESE DÍA)
+        
+        const fechaInicioDia = new Date(fechaISO + 'T00:00:00.000Z');
+        const fechaFinDia = new Date(fechaISO + 'T23:59:59.999Z');
+
+        const asignacionesReservadas = await this._turnoTatuadorRepo.findReservadosEnRango(
+            tatuadorId,
+            fechaInicioDia,
+            fechaFinDia
+        );
+        
+        // Mapear horarios ocupados 
+
+        const horariosOcupados = asignacionesReservadas.map(a => {
+            if (!a.turnoSesion || !a.turnoSesion.fecha_hora_inicio) return '';
+            
+            const d = new Date(a.turnoSesion.fecha_hora_inicio);
+            const h = d.getHours().toString().padStart(2, '0');
+            const m = d.getMinutes().toString().padStart(2, '0');
+
+            return `${h}:${m}`;
+        }).filter(h => h !== ''); // Filtramos por si alguno fue inválido
+
+        // Generar todos los slots posibles y filtrar 
+
+        const slotsDisponibles: string[] = [];
+        const duracionMin = horarioDelDia.duracion_turno_min;
+        
+        let horaActual = new Date(fechaISO + 'T' + horarioDelDia.hora_inicio + 'Z');
+        const horaFin = new Date(fechaISO + 'T' + horarioDelDia.hora_fin + 'Z');
+
+        while (horaActual < horaFin) {
+            const h = horaActual.getHours().toString().padStart(2, '0');
+            const m = horaActual.getMinutes().toString().padStart(2, '0');
+            const slotStr = `${h}:${m}`; 
+
+            if (!horariosOcupados.includes(slotStr)) {
+                slotsDisponibles.push(slotStr);
+            }
+
+            horaActual.setMinutes(horaActual.getMinutes() + duracionMin);
+        }
+
+        return slotsDisponibles;
+    }
+
+
 
     async getHorarioHabitual(tatuadorId: number): Promise<HorarioHabitual[]> {
         const horarios = await this._horarioRepo.findByTatuadorId(tatuadorId);

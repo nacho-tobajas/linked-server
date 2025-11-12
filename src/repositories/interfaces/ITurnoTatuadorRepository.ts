@@ -17,6 +17,12 @@ export interface ITurnoTatuadorRepository extends IBaseRepository<TurnoTatuador>
         manager?: EntityManager
     ): Promise<TurnoTatuador | null>;
 
+    findReservadosEnRango(
+        tatuadorId: number, 
+        fechaInicio: Date, 
+        fechaFin: Date
+    ): Promise<TurnoTatuador[]>;
+
     /**
      * Guarda una nueva asignación, opcionalmente usando un manager de transacción.
      */

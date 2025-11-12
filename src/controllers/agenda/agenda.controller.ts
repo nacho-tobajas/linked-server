@@ -18,7 +18,33 @@ export class AgendaController {
         this._agendaService = agendaService;
     }
 
-    // --- ENDPOINT PARA OBTENER EL HORARIO HABITUAL ---
+    //Endpoint para cliente
+    @httpGet('/:tatuadorId/slots-dia', authenticateToken)
+    public async getSlotsParaDia(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { tatuadorId } = req.params;
+            // El frontend envía la fecha como query parameter: ?fecha=YYYY-MM-DD
+            const { fecha } = req.query; 
+
+            if (!fecha || typeof fecha !== 'string') {
+                throw new ValidationError("Se requiere una fecha en formato YYYY-MM-DD.", 400);
+            }
+
+            const fechaLocal = new Date(fecha + 'T00:00:00');
+
+            const slots = await this._agendaService.getSlotsDisponiblesParaDia(
+                Number(tatuadorId), 
+                fechaLocal // Fecha corregida
+            );
+            
+            res.status(200).json(slots);
+
+        } catch (error) {
+            next(error); 
+        }
+    }
+
+    // Endpoint para tatuadores
     @httpGet('/horario-habitual', authenticateToken, authorizeRol('Tatuador')) // Solo tatuadores logueados
     public async getHorarioHabitual(req: Request, res: Response, next: NextFunction) {
         try {
