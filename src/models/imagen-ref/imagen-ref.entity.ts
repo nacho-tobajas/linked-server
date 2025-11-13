@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Relation,
+  JoinColumn,
 } from 'typeorm';
 import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
 
@@ -19,6 +20,7 @@ export class ImagenRef {
     onDelete: 'RESTRICT',
     eager: true,
   })
+  @JoinColumn({ name: "id_turno_sesion" })
   public turnoSesion!: Relation<TurnoSesion>;
 
 

@@ -8,6 +8,7 @@ import { ITurnosService } from "../interfaces/agenda/ITurno.service.js";
 // Asumo la ruta de tu enum, ajústala si es necesario
 import { EstadoTurno } from "../../models/enums/estado-turno.enum.js";
 import { Not } from "typeorm";
+import { ImagenRef } from "../../models/imagen-ref/imagen-ref.entity.js";
 
 // Interfaz DTO para la creación de turnos
 export interface SolicitarTurnoDto {
@@ -23,7 +24,7 @@ export class TurnosService implements ITurnosService {
     private turnoRepo = AppDataSource.getRepository(TurnoSesion);
     private turnoTatuadorRepo = AppDataSource.getRepository(TurnoTatuador);
     private userRepo = AppDataSource.getRepository(User);
-
+    private imagenRefRepo = AppDataSource.getRepository(ImagenRef);
     /**
      * Valida si un tatuador está disponible en el rango de fechas solicitado.
      * Busca turnos que NO estén cancelados o rechazados y que se solapen con el nuevo horario.
@@ -58,7 +59,7 @@ export class TurnosService implements ITurnosService {
         }
     }
 
-    public async solicitarTurno(datos: SolicitarTurnoDto, clienteId: number): Promise<TurnoSesion> {
+    public async solicitarTurno(datos: SolicitarTurnoDto, clienteId: number, imagePaths: string[]): Promise<TurnoSesion> {
         
         const { tatuadorId, fecha_hora_inicio, fecha_hora_fin, descripcion_cliente } = datos;
 
@@ -99,13 +100,23 @@ export class TurnosService implements ITurnosService {
             
             await manager.save(nuevaAsignacion);
 
+            const repoImg = manager.getRepository(ImagenRef);
+            for (const path of imagePaths) {
+                const nuevaImagen = new ImagenRef();
+                nuevaImagen.turnoSesion = turnoGuardado;
+                nuevaImagen.image_path = path;
+                nuevaImagen.creationuser = cliente.username!;
+                await repoImg.save(nuevaImagen); // Guardamos dentro de la transacción
+            }
+
             // Retornamos el turno con la asignación cargada
             // (findone para recargar la relación que acabamos de crear)
             return await manager.findOne(TurnoSesion, {
                 where: { id: turnoGuardado.id },
                 relations: { 
                     tatuadoresAsignados: { tatuador: true }, // Asumo este nombre de relación
-                    cliente: true 
+                    cliente: true,
+                    imagenes: true 
                 }
             }) as TurnoSesion;
         });

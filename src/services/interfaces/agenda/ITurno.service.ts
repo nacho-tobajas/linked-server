@@ -4,7 +4,7 @@ import { IBaseService } from '../IBaseService.js';
 import { EstadoTurno } from '../../../models/enums/estado-turno.enum.js';
 
 export interface ITurnosService extends IBaseService<TurnoSesion> {
-    solicitarTurno(datos: any, clienteId: number): Promise<TurnoSesion>;
+    solicitarTurno(datos: any, clienteId: number, imagePaths: string[]): Promise<TurnoSesion>;
     getTurnosByTatuador(tatuadorId: number): Promise<TurnoTatuador[]>;
     getTurnosByCliente(clienteId: number): Promise<TurnoSesion[]>;
     getTurnoById(turnoId: number): Promise<TurnoSesion>;
