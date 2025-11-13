@@ -5,6 +5,8 @@ import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken
 import { TurnosService } from '../../services/agenda/turno.service.js';
 import { ITurnosService } from '../../services/interfaces/agenda/ITurno.service.js';
 import { uploadTurno } from '../../config/cloudinary/multer.config.js';
+import { ValidationError } from '../../middleware/errorHandler/validationError.js';
+import { EstadoTurno } from '../../models/enums/estado-turno.enum.js';
 
 @controller('/api/turnos')
 export class TurnosController {
@@ -48,6 +50,31 @@ export class TurnosController {
     }
   }
 
-  // ... (Aquí irían los endpoints PATCH para gestionar turnos)
+  // Endpoint para que el Tatuador gestione un turno (Aprobar, Rechazar, Completar)
+  
+  @httpPatch('/gestionar/:idTurno', authenticateToken, authorizeRol('Tatuador'))
+  public async gestionarTurno(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tatuadorId = req.user?.id;
+      const turnoId = parseInt(req.params.idTurno, 10);
+      
+      const { estado } = req.body; 
+
+      if (!estado || !Object.values(EstadoTurno).includes(estado)) {
+        throw new ValidationError("Se requiere un estado válido.", 400);
+      }
+
+      const turnoActualizado = await this._turnosService.actualizarEstadoTurno(
+        turnoId,
+        estado as EstadoTurno,
+        tatuadorId!
+      );
+
+      res.status(200).json(turnoActualizado);
+
+    } catch (error) {
+      next(error);
+    }
+  }
 
 }

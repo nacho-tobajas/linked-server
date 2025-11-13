@@ -25,6 +25,7 @@ export class TurnosService implements ITurnosService {
     private turnoTatuadorRepo = AppDataSource.getRepository(TurnoTatuador);
     private userRepo = AppDataSource.getRepository(User);
     private imagenRefRepo = AppDataSource.getRepository(ImagenRef);
+    
     /**
      * Valida si un tatuador está disponible en el rango de fechas solicitado.
      * Busca turnos que NO estén cancelados o rechazados y que se solapen con el nuevo horario.
@@ -134,7 +135,7 @@ export class TurnosService implements ITurnosService {
             relations: {
                 turnoSesion: {
                     cliente: true,
-                    imagenes: true // Asumo que 'imagenes' es una relación en TurnoSesion
+                    imagenes: true
                 }
             },
             order: {
@@ -187,7 +188,6 @@ export class TurnosService implements ITurnosService {
 
     /**
      * Permite a un gestor (tatuador) cambiar el estado de un turno.
-     * (Ej: PENDIENTE -> APROBADO, APROBADO -> COMPLETADO)
      */
     public async actualizarEstadoTurno(
         turnoId: number, 
@@ -231,59 +231,45 @@ export class TurnosService implements ITurnosService {
                  throw new ValidationError(`El turno ya está ${turno.estado} y no se puede modificar.`, 409);
             }
 
-            // Actualizar
-            turno.estado = nuevoEstado;
-            turno.modificationuser = gestor.username;
-            turno.modificationtimestamp = new Date();
+            await manager.update(TurnoSesion, turnoId, {
+                estado: nuevoEstado,
+                modificationuser: gestor.username,
+                modificationtimestamp: new Date()
+            });
 
-            return await manager.save(turno);
+            const turnoActualizado = await manager.findOne(TurnoSesion, {
+                where: { id: turnoId },
+                relations: { 
+                    cliente: true,
+                    tatuadoresAsignados: { tatuador: true } 
+                } // La recargamos completa
+            });
+
+            return turnoActualizado!;
         });
     }
 
-    // --- MÉTODOS CRUD GENÉRICOS (Para satisfacer la interfaz) ---
 
-    /**
-     * (Método CRUD genérico) Busca un turno por ID.
-     * Prefiera usar getTurnoById si necesita las relaciones cargadas.
-     */
     public async findOne(id: number): Promise<TurnoSesion | undefined> {
         return;
     }
 
-    /**
-     * (Método CRUD genérico) Devuelve todos los turnos.
-     * (¡Cuidado! Esto puede devolver miles de turnos sin paginación).
-     */
     public async findAll(): Promise<TurnoSesion[]> {
         return this.turnoRepo.find();
     }
 
-    /**
-     * (Método CRUD genérico) NO USAR.
-     * Este método no incluye la lógica de negocio (como crear la asignación M:N en TurnoTatuador).
-     * Use 'solicitarTurno' en su lugar.
-     */
     public async create(data: any): Promise<TurnoSesion> {
         throw new Error(
             "Método 'create' no implementado. Use 'solicitarTurno' para asegurar la lógica de negocio."
         );
     }
 
-    /**
-     * (Método CRUD genérico) NO USAR.
-     * Este método no incluye la lógica de negocio (como validar permisos del tatuador).
-     * Use 'actualizarEstadoTurno' en su lugar.
-     */
     public async update(id: number, data: any): Promise<TurnoSesion> {
         throw new Error(
             "Método 'update' no implementado. Use 'actualizarEstadoTurno' para asegurar la lógica de negocio."
         );
     }
 
-    /**
-     * (Método CRUD genérico) Borra un turno de la base de datos.
-     * (¡Cuidado! Esto es un borrado físico).
-     */
     public async delete(id: number): Promise<TurnoSesion | undefined> {
         const result = await this.turnoRepo.delete(id);
         if (result.affected === 0) {
