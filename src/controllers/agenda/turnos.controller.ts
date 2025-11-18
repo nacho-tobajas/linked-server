@@ -77,4 +77,33 @@ export class TurnosController {
     }
   }
 
+  @httpGet('/:id/mensajes', authenticateToken)
+  public async getMensajes(req: Request, res: Response, next: NextFunction) {
+    try {
+      const turnoId = parseInt(req.params.id, 10);
+      // TODO: Podrías validar aquí también que el usuario tenga permiso de verlos
+      const mensajes = await this._turnosService.getMensajesTurno(turnoId);
+      res.status(200).json(mensajes);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // POST: Enviar mensaje
+  @httpPost('/:id/mensajes', authenticateToken)
+  public async enviarMensaje(req: Request, res: Response, next: NextFunction) {
+    try {
+      const turnoId = parseInt(req.params.id, 10);
+      const usuarioId = req.user?.id;
+      const { mensaje } = req.body;
+
+      if (!mensaje) throw new ValidationError("El mensaje no puede estar vacío", 400);
+
+      const mensajeCreado = await this._turnosService.enviarMensaje(turnoId, usuarioId!, mensaje);
+      res.status(201).json(mensajeCreado);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }

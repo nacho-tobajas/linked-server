@@ -13,6 +13,7 @@ import { User } from '../usuarios/user.entity.js';
 import { ImagenRef } from '../imagen-ref/imagen-ref.entity.js';
 import { TurnoTatuador } from '../turno-tatuador/turno-tatuador.entity.js';
 import { EstadoTurno } from '../enums/estado-turno.enum.js';
+import { TurnoMensaje } from './turno-mensaje.entity.js';
 
 @Entity('tat_turno_sesion')
 export class TurnoSesion {
@@ -63,6 +64,8 @@ export class TurnoSesion {
   @UpdateDateColumn({ name: 'modificationtimestamp', nullable: true })
   public modificationtimestamp?: Date;
 
+  @OneToMany(() => TurnoMensaje, m => m.turnoSesion) 
+  public mensajes?: TurnoMensaje[];
 
 
   /*constructor(

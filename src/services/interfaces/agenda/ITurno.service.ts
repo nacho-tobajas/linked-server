@@ -2,6 +2,7 @@ import { TurnoTatuador } from '../../../models/turno-tatuador/turno-tatuador.ent
 import { TurnoSesion } from '../../../models/turno-sesion/turno-sesion.entity.js';
 import { IBaseService } from '../IBaseService.js';
 import { EstadoTurno } from '../../../models/enums/estado-turno.enum.js';
+import { TurnoMensaje } from '../../../models/turno-sesion/turno-mensaje.entity.js';
 
 export interface ITurnosService extends IBaseService<TurnoSesion> {
     solicitarTurno(datos: any, clienteId: number, imagePaths: string[]): Promise<TurnoSesion>;
@@ -13,4 +14,7 @@ export interface ITurnosService extends IBaseService<TurnoSesion> {
         nuevoEstado: EstadoTurno, 
         gestorId: number
     ): Promise<TurnoSesion>;
+    enviarMensaje(turnoId: number, usuarioId: number, texto: string): Promise<TurnoMensaje>;
+    getMensajesTurno(turnoId: number): Promise<TurnoMensaje[]>;
+
 }

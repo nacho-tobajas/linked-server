@@ -9,6 +9,7 @@ import { ITurnosService } from "../interfaces/agenda/ITurno.service.js";
 import { EstadoTurno } from "../../models/enums/estado-turno.enum.js";
 import { Not } from "typeorm";
 import { ImagenRef } from "../../models/imagen-ref/imagen-ref.entity.js";
+import { TurnoMensaje } from "../../models/turno-sesion/turno-mensaje.entity.js";
 
 // Interfaz DTO para la creación de turnos
 export interface SolicitarTurnoDto {
@@ -25,6 +26,7 @@ export class TurnosService implements ITurnosService {
     private turnoTatuadorRepo = AppDataSource.getRepository(TurnoTatuador);
     private userRepo = AppDataSource.getRepository(User);
     private imagenRefRepo = AppDataSource.getRepository(ImagenRef);
+    private mensajeRepo = AppDataSource.getRepository(TurnoMensaje);
     
     /**
      * Valida si un tatuador está disponible en el rango de fechas solicitado.
@@ -76,11 +78,9 @@ export class TurnosService implements ITurnosService {
         const tatuador = await this.userRepo.findOneBy({ id: tatuadorId });
         if (!cliente) throw new ValidationError("Cliente no encontrado", 404);
         if (!tatuador) throw new ValidationError("Tatuador no encontrado", 404);
-        // Aquí podrías validar que el tatuadorId tenga el ROL de tatuador
 
         return AppDataSource.transaction(async (manager) => {
             
-            // Validar disponibilidad DENTRO de la transacción
             await this.validarDisponibilidad(tatuadorId, newStart, newEnd, manager);
 
             // Crear el TurnoSesion 
@@ -111,11 +111,10 @@ export class TurnosService implements ITurnosService {
             }
 
             // Retornamos el turno con la asignación cargada
-            // (findone para recargar la relación que acabamos de crear)
             return await manager.findOne(TurnoSesion, {
                 where: { id: turnoGuardado.id },
                 relations: { 
-                    tatuadoresAsignados: { tatuador: true }, // Asumo este nombre de relación
+                    tatuadoresAsignados: { tatuador: true }, 
                     cliente: true,
                     imagenes: true 
                 }
@@ -151,7 +150,6 @@ export class TurnosService implements ITurnosService {
      * Retorna las sesiones (TurnoSesion)
      */
     public async getTurnosByCliente(clienteId: number): Promise<TurnoSesion[]> {
-        // Asumo que la relación inversa en TurnoSesion se llama 'asignacionesTatuador'
         return this.turnoRepo.find({
             where: {
                 cliente: { id: clienteId }
@@ -215,14 +213,13 @@ export class TurnosService implements ITurnosService {
             }
 
             // Validación de permisos: Solo el tatuador asignado puede gestionar el turno
-            // (Aquí podrías agregar lógica para rol 'ADMIN')
             const estaAsignado = turno.tatuadoresAsignados!
                 .some(asig => asig.tatuador?.id === gestorId);
             
             if (!estaAsignado) {
                  throw new ValidationError(
                     "No tienes permisos para modificar este turno. Solo el tatuador asignado puede hacerlo.", 
-                    403 // 403 Forbidden
+                    403 
                 );
             }
 
@@ -242,12 +239,56 @@ export class TurnosService implements ITurnosService {
                 relations: { 
                     cliente: true,
                     tatuadoresAsignados: { tatuador: true } 
-                } // La recargamos completa
+                } 
             });
 
             return turnoActualizado!;
         });
     }
+
+    /**
+   * Envía un mensaje en el contexto de un turno.
+   */
+  public async enviarMensaje(turnoId: number, usuarioId: number, texto: string): Promise<TurnoMensaje> {
+    
+    // 1. Validar que el turno existe
+    const turno = await this.turnoRepo.findOne({ 
+        where: { id: turnoId },
+        relations: { cliente: true, tatuadoresAsignados: { tatuador: true } }
+    });
+    
+    if (!turno) throw new ValidationError("Turno no encontrado", 404);
+
+    // 2. Validar Seguridad: ¿El usuario es el cliente O el tatuador asignado?
+    const esCliente = turno.cliente?.id === usuarioId;
+    const esTatuador = turno.tatuadoresAsignados?.some(tt => tt.tatuador?.id === usuarioId);
+
+    if (!esCliente && !esTatuador) {
+        throw new ValidationError("No tienes permiso para comentar en este turno.", 403);
+    }
+
+    // 3. Guardar el mensaje
+    const usuario = await this.userRepo.findOneBy({ id: usuarioId });
+    
+    const nuevoMensaje = new TurnoMensaje();
+    nuevoMensaje.turnoSesion = turno;
+    nuevoMensaje.usuarioEnvia = usuario!;
+    nuevoMensaje.mensaje = texto;
+    
+    return this.mensajeRepo.save(nuevoMensaje);
+  }
+
+  /**
+   * Obtiene el historial de mensajes de un turno
+   */
+  public async getMensajesTurno(turnoId: number): Promise<TurnoMensaje[]> {
+      return this.mensajeRepo.find({
+          where: { turnoSesion: { id: turnoId } },
+          relations: { usuarioEnvia: true }, // Para mostrar el nombre y foto de quien escribe
+          order: { timestamp: 'ASC' } // Del más viejo al más nuevo (tipo chat)
+      });
+  }
+
 
 
     public async findOne(id: number): Promise<TurnoSesion | undefined> {
