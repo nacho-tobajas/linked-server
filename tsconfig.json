@@ -14,9 +14,23 @@
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "types": ["node", "jest"],
+    "types": [
+      "node",
+      "jest"
+    ],
     "baseUrl": "./src", // Configura la raíz de los módulos
     "paths": {
-      "*": ["node_modules", "src/*"]}
-  }
+      "*": [
+        "node_modules",
+        "src/*"
+      ]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types" // <-- Asegúrate que esta línea (o similar) exista y apunte a tu carpeta 'types'
+    ],
+  },
+  "include": [
+    "src/**/*" // <-- Asegúrate que esto incluya la carpeta 'src/types'
+  ]
 }

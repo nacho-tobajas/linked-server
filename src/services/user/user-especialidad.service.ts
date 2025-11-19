@@ -102,9 +102,9 @@ export class UserEspecialidadService {
     const user = await this.userRepo.findOne(userId);
     if (!user) throw new ValidationError("Usuario no encontrado", 404);
 
-    await this.checkIsTatuador(user);
-
-    return await user.especialidades ?? [];
+    //await this.checkIsTatuador(user); No verificar el rol acá porque no te deja ver el perfil 
+    const especialidades = await user.especialidades ?? [];
+    return especialidades;
   }
 
 }

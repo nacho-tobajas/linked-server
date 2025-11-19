@@ -22,8 +22,16 @@ export const authenticateToken = (
       res.sendStatus(403);
       return;
     }
-    if (typeof decoded === 'object' && 'id' in decoded) {
-      //(req as any).user = { id: (decoded as { id: number }).id };
+    if (typeof decoded === 'object' && 'id' in decoded && 'username' in decoded && 'rol' in decoded) {
+        // 👇 --- UNCOMMENT AND FIX THIS LINE --- 👇
+        // Assign the relevant parts of the decoded token to req.user
+        // Make sure this matches the UserPayload interface you defined
+        req.user = {
+            id: (decoded as { id: number }).id,
+            username: (decoded as { username: string }).username,
+            roles: (decoded as { rol: string[] | number[] }).rol // Assuming 'rol' holds the roles
+            // Add other properties if needed
+        };
       res.locals.userId = (decoded as { id: number }).id;
       next();
     } else {

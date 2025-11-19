@@ -12,7 +12,7 @@ import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
-import { upload } from '../../config/cloudinary/multer.config.js';
+import { uploadUser } from '../../config/cloudinary/multer.config.js';
 import path from 'path';
 
 @controller('/api/users')
@@ -123,7 +123,7 @@ export class UserController {
         }
     };
 
-    @httpPut('/:id', upload.single('image'), authenticateToken, validateInputData(updateUserValidationRules))
+    @httpPut('/:id', uploadUser.single('image'), authenticateToken, validateInputData(updateUserValidationRules))
     public async update(req: Request, res: Response, next: NextFunction) {
         const id = parseInt(req.params.id, 10);
         const userUpdates = req.body;
@@ -156,7 +156,7 @@ export class UserController {
 
     //Nuevo metodo para actualizar la foto de perfil del usuario
 
-    @httpPatch('/:id/profile-photo', authenticateToken, upload.single('image'))
+    @httpPatch('/:id/profile-photo', authenticateToken, uploadUser.single('image'))
     public async updateProfilePhoto(req: Request, res: Response, next: NextFunction) {
   const id = parseInt(req.params.id, 10);
 
@@ -264,7 +264,7 @@ export class UserController {
         }
     };
 
-    @httpPut('/updateUser/:id', upload.single('image'),authenticateToken, validateInputData(updateUserByAdminValidationRules))
+    @httpPut('/updateUser/:id', uploadUser.single('image'),authenticateToken, validateInputData(updateUserByAdminValidationRules))
     public async updateUserByAdmin(req: Request, res: Response, next: NextFunction) {
 
         const id = parseInt(req.params.id, 10);

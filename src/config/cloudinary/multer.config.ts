@@ -21,7 +21,7 @@ if (USE_CLOUDINARY) {
   });*/
 } else {
   // --- Configuración para almacenamiento local ---
-  storage = multer.diskStorage({
+  /*storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // Usa process.cwd() para que siempre guarde en la raíz del proyecto
       const uploadPath = path.join(process.cwd(), "uploads/users");
@@ -36,7 +36,39 @@ if (USE_CLOUDINARY) {
       const ext = path.extname(file.originalname);
       cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
     },
-  });
+  });*/
 }
 
-export const upload = multer({ storage });
+// CONFIGURACIÓN DE STORAGE PARA USUARIOS
+const userStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), "uploads/users");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  },
+});
+
+// CONFIGURACIÓN DE STORAGE PARA TURNOS 
+const turnoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), "uploads/turnos");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  },
+});
+
+
+export const uploadUser = multer({ storage: userStorage });
+export const uploadTurno = multer({ storage: turnoStorage });
+
+//export const upload = multer({ storage });

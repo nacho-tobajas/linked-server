@@ -29,7 +29,7 @@ export class UserMapper {
         userToCreate.realname = newUser.realname;
         userToCreate.surname = newUser.surname;
         userToCreate.username = newUser.username;
-        userToCreate.email = newUser.email; // Agregado
+        userToCreate.email = newUser.email; 
         userToCreate.resetPasswordToken = undefined;
         userToCreate.resetPasswordExpires = undefined;
         userToCreate.birth_date = newUser.birth_date;
@@ -46,8 +46,18 @@ export class UserMapper {
 
     }
 
-    async convertToEntityOnUpdate(id: number, userWithChanges: User, oldUser: User) {
+    async convertToEntityOnUpdate(id: number, userWithChanges: User, oldUser: User):Promise<Partial<User>> {
+    const getTextValue = (newValue: string | null | undefined, oldValue: string | null | undefined): string | null | undefined => {
+        if (newValue === '') {
+            return null; 
+        } else if (newValue !== undefined) {
+            return newValue; 
+        } else {
+            return oldValue; 
+        }
+    };
 
+<<<<<<< HEAD
         const userToUpdate: User = {
             id: oldUser.id,
             realname: userWithChanges.realname && userWithChanges.realname.trim() !== ''
@@ -72,11 +82,46 @@ export class UserMapper {
             resetPasswordExpires: undefined
         };
         return userToUpdate;
+=======
+
+    const getDateValue = (newValue: Date | string | null | undefined, oldValue: Date | null | undefined): Date | null | undefined => {
+        if (newValue === null) {
+            return null; 
+        } else if (newValue !== undefined) {
+            const date = newValue ? new Date(newValue) : null;
+            return (date instanceof Date && !isNaN(date.getTime())) ? date : null; 
+        } else {
+            return oldValue; 
+        }
+    };
+
+    const userToUpdate: Partial<User> = {
+      username: userWithChanges.username?.trim() ? userWithChanges.username : oldUser.username,
+      email: userWithChanges.email ?? oldUser.email, 
+      status: userWithChanges.status ?? oldUser.status,
+      realname: getTextValue(userWithChanges.realname, oldUser.realname),
+      surname: getTextValue(userWithChanges.surname, oldUser.surname),
+      estudio: getTextValue(userWithChanges.estudio, oldUser.estudio),
+      birth_date: getDateValue(userWithChanges.birth_date, oldUser.birth_date),
+      fecha_inicio_actividad: getDateValue(userWithChanges.fecha_inicio_actividad, oldUser.fecha_inicio_actividad),
+
+      profile_photo: userWithChanges.profile_photo ?? oldUser.profile_photo,
+      delete_date: userWithChanges.delete_date ?? oldUser.delete_date, 
+      modificationuser: userWithChanges.modificationuser, 
+      modificationtimestamp: new Date(),
+    };
+
+    // Limpiar propiedades undefined para evitar problemas con TypeORM (opcional pero seguro)
+    Object.keys(userToUpdate).forEach(key => userToUpdate[key as keyof Partial<User>] === undefined && delete userToUpdate[key as keyof Partial<User>]);
+
+    return userToUpdate;
+>>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
 
     }
 
-    async convertToDto(userCreated: User, rolAsigned: RolApl): Promise<UserDto> {
+    async convertToDto(entity: User, rolAsigned: RolApl): Promise<UserDto> {
 
+<<<<<<< HEAD
         const userDto: UserDto = {
             idUser: userCreated?.id,
             idRolApl: userCreated?.currentRolId, //Nuevo
@@ -94,8 +139,60 @@ export class UserMapper {
             delete_date: userCreated?.delete_date,
             especialidades: await userCreated.especialidades,
         };
+=======
+        const userDto = new UserDto(); 
+>>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
 
-        return userDto
+        userDto.idUser = entity.id;
+        userDto.idRolApl = rolAsigned?.id; 
+        userDto.email = entity.email;
+        userDto.rolDesc = rolAsigned?.description;
+        userDto.realname = entity.realname;
+        userDto.surname = entity.surname;
+        userDto.username = entity.username;
+        userDto.profile_photo = entity.profile_photo;
+        userDto.birth_date = entity.birth_date;
+        userDto.status = entity.status;
+        userDto.creationtimestamp = entity.creationtimestamp;
+        userDto.estudio = entity.estudio;
+        userDto.fecha_inicio_actividad = entity.fecha_inicio_actividad;
 
+
+        //Calculo de antiguedad
+        if (entity.fecha_inicio_actividad) {
+            const hoy = new Date();
+            
+            const inicio = typeof entity.fecha_inicio_actividad === 'string'
+                         ? new Date(entity.fecha_inicio_actividad)
+                         : entity.fecha_inicio_actividad;
+
+            if (inicio instanceof Date && !isNaN(inicio.getTime())) { 
+                let antiguedadEnAnios = hoy.getFullYear() - inicio.getFullYear();
+                const mesActual = hoy.getMonth();
+                const diaActual = hoy.getDate();
+                const mesInicio = inicio.getMonth();
+                const diaInicio = inicio.getDate();
+
+                if (mesActual < mesInicio || (mesActual === mesInicio && diaActual < diaInicio)) {
+                    antiguedadEnAnios--;
+                }
+                userDto.antiguedad = Math.max(0, antiguedadEnAnios); 
+            } else {
+                 userDto.antiguedad = undefined; 
+            }
+        } else {
+            userDto.antiguedad = undefined; 
+        }
+        
+
+
+        // --- Mapping Especialidades ---
+         if (Array.isArray(entity.especialidades)) {
+             userDto.especialidades = entity.especialidades;
+         } else {
+             userDto.especialidades = undefined; 
+         }
+
+        return userDto; 
     }
 }

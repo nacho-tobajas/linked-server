@@ -14,7 +14,11 @@ import { IUserRolAplService } from '../interfaces/user/IUserRolAplService.js';
 import { IUserRepository } from '../../repositories/interfaces/user/IUserRepository.js';
 import { CreateEmailBody } from '../../middleware/email-creator/email.js';
 import { UserMapper } from '../../mappers/user/user.mapper.js';
-
+import fs from 'fs'; 
+import path from 'path'; 
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 @injectable()
 export class UserService implements IUserService {
@@ -43,16 +47,15 @@ export class UserService implements IUserService {
     return await this._userRepository.sendResetPassword(email, token);
   }
 
-  //Nuevo
   async findByResetToken(token: string): Promise<User | null> {
     return await this._userRepository.findOneby(token);
   }
-  //Nuevo
+
   async findByEmail(email: string): Promise<User | undefined> {
     const user = await this._userRepository.findByEmail(email);
     return user === null ? undefined : user;
   }
-  //Nuevo
+
   async updatePassword(userid: number, newPassword: string): Promise<void> {
 
     const user = await this._userRepository.findOne(userid);
@@ -129,22 +132,62 @@ export class UserService implements IUserService {
     return userOutput;
   }
 
-  async update(id: number, user: User): Promise<User> {
+  async update(id: number, userChanges: Partial<User>): Promise<User> {
     const oldUser = await this._userRepository.findOne(id);
     if (!oldUser) {
-      throw new ValidationError('Usuario no encontrado', 400);
+      throw new ValidationError('Usuario no encontrado', 404);
     }
 
-    // Evita sobreescribir la imagen existente si no se subió una nueva
-    if (!user.profile_photo) {
-      user.profile_photo = oldUser.profile_photo;
+    // Prepara el payload parcial para la actualización
+    const updatePayload: Partial<User> = await this._userMapper.convertToEntityOnUpdate(id, userChanges as User, oldUser);
+
+    // Guarda los paths de las fotos ANTES de actualizar
+    const oldPhotoPath = oldUser.profile_photo;
+    const newPhotoPath = updatePayload.profile_photo;
+
+    // Ejecuta la actualización en la base de datos
+    await this._userRepository.update(id, updatePayload);
+
+
+    // Lógica para borrar foto antigua 
+    if (oldPhotoPath && newPhotoPath && oldPhotoPath !== newPhotoPath && oldPhotoPath.startsWith('/uploads/users/')) {
+
+    // 1. Obtenemos la ruta raíz del proyecto subiendo 3 niveles desde __dirname
+    const projectRoot = path.join(__dirname, '../../..');
+
+    // 2. Extraemos la parte relativa de oldPhotoPath (quitamos el '/' inicial)
+    // Ejemplo: '/uploads/users/foto.png' -> 'uploads/users/foto.png'
+    const relativeImagePath = oldPhotoPath.substring(1);
+
+    // 3. Unimos la raíz con la ruta relativa de la imagen
+    const fullPath = path.join(projectRoot, relativeImagePath);
+
+    console.log(`RUTA CALCULADA para borrar: ${fullPath}`); // Verifica que esta ruta sea correcta!
+
+    // Intenta borrar el archivo
+    fs.unlink(fullPath, (err) => {
+        if (err) {
+            // Manejo de errores más detallado
+            if (err.code === 'ENOENT') {
+                console.warn('La foto de perfil antigua no se encontró para borrar:', fullPath);
+            } else {
+                console.error('Error al borrar la foto de perfil antigua:', err);
+            }
+        } else {
+            console.log('Foto de perfil antigua borrada:', oldPhotoPath);
+        }
+    });
+  }
+
+    // Vuelve a buscar el usuario actualizado para devolverlo completo
+    const userOutput = await this._userRepository.findOne(id);
+    if (!userOutput) {
+        throw new Error('No se pudo recuperar el usuario después de actualizar');
     }
 
-    const updatedUser = await this._userMapper.convertToEntityOnUpdate(id, user, oldUser);
-
-    const userOutput = this._userRepository.update(id, updatedUser)
-
-    return userOutput;
+    return userOutput; // Devuelve la entidad User completa y actualizada
+    // const rol = await this._userRolAplService.SearchUserCurrentRol(await userOutput.userRolApl);
+    // return this._userMapper.convertToDto(userOutput, rol!);
   }
 
   async delete(id: number): Promise<User | undefined> {
@@ -163,20 +206,59 @@ export class UserService implements IUserService {
     return isUserNameOcuped;
   }
 
-  async updateUserByAdmin(id: number, userInput: User): Promise<User | undefined> {
+  async updateUserByAdmin(id: number, userChanges: Partial<User>): Promise<User | undefined> {
 
     const oldUser = await this._userRepository.findOne(id);
     if (!oldUser) {
-      throw new ValidationError('Usuario no encontrado', 400);
+      throw new ValidationError('Usuario no encontrado', 404);
     }
 
-    const updatedUserData = await this._userMapper.convertToEntityOnUpdate(id, userInput, oldUser);
+    const updatePayload: Partial<User> = await this._userMapper.convertToEntityOnUpdate(id, userChanges as User, oldUser);
 
-    let userUpdated = await this._userRepository.update(id, updatedUserData);
-    if (!userUpdated) return;
+const oldPhotoPath = oldUser.profile_photo;
+    const newPhotoPath = updatePayload.profile_photo;
 
-    return userUpdated;
+    await this._userRepository.update(id, updatePayload);
+
+
+     if (oldPhotoPath && newPhotoPath && oldPhotoPath !== newPhotoPath && oldPhotoPath.startsWith('/uploads/users/')) {
+
+    // 1. Obtenemos la ruta raíz del proyecto subiendo 3 niveles desde __dirname
+    const projectRoot = path.join(__dirname, '../../..');
+
+    // 2. Extraemos la parte relativa de oldPhotoPath (quitamos el '/' inicial)
+    // Ejemplo: '/uploads/users/foto.png' -> 'uploads/users/foto.png'
+    const relativeImagePath = oldPhotoPath.substring(1);
+
+    // 3. Unimos la raíz con la ruta relativa de la imagen
+    const fullPath = path.join(projectRoot, relativeImagePath);
+
+    console.log(`RUTA CALCULADA para borrar: ${fullPath}`); // Verifica que esta ruta sea correcta!
+
+    // Intenta borrar el archivo
+    fs.unlink(fullPath, (err) => {
+        if (err) {
+            // Manejo de errores más detallado
+            if (err.code === 'ENOENT') {
+                console.warn('La foto de perfil antigua no se encontró para borrar:', fullPath);
+            } else {
+                console.error('Error al borrar la foto de perfil antigua:', err);
+            }
+        } else {
+            console.log('Foto de perfil antigua borrada:', oldPhotoPath);
+        }
+    });
   }
+
+    const userUpdated = await this._userRepository.findOne(id);
+   
+
+    return userUpdated; 
+
+    // const rol = await this._userRolAplService.SearchUserCurrentRol(await userUpdated.userRolApl);
+    // return this._userMapper.convertToDto(userUpdated, rol!);
+  }
+  
 
   async findAllTatuadores(): Promise<UserDto[]> {
     // 1. Llama al nuevo método del repositorio
