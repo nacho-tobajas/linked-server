@@ -25,14 +25,23 @@ export class TurnosController {
       
       const files = req.files as Express.Multer.File[];
 
-      console.log('--- NUEVA SOLICITUD DE TURNO ---');
-      console.log('DATOS DE TEXTO (req.body):', datosTurno);
-      console.log('ARCHIVOS RECIBIDOS (req.files):', files);
-
       const filePaths = files ? files.map(file => `/uploads/turnos/${file.filename}`) : [];
 
       const nuevoTurno = await this._turnosService.solicitarTurno(datosTurno, clienteId!, filePaths);
       res.status(201).json(nuevoTurno);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // --- Endpoint para el CLIENTE (Ver sus reservas) ---
+  @httpGet('/mis-reservas-cliente', authenticateToken, //authorizeRol('Cliente')
+    )
+  public async getMisReservasCliente(req: Request, res: Response, next: NextFunction) {
+    try {
+      const clienteId = req.user?.id;
+      const turnos = await this._turnosService.getTurnosByCliente(clienteId!);
+      res.status(200).json(turnos);
     } catch (error) {
       next(error);
     }
@@ -51,7 +60,6 @@ export class TurnosController {
   }
 
   // Endpoint para que el Tatuador gestione un turno (Aprobar, Rechazar, Completar)
-  
   @httpPatch('/gestionar/:idTurno', authenticateToken, authorizeRol('Tatuador'))
   public async gestionarTurno(req: Request, res: Response, next: NextFunction) {
     try {
@@ -77,11 +85,11 @@ export class TurnosController {
     }
   }
 
+  //Obtener mensajes
   @httpGet('/:id/mensajes', authenticateToken)
   public async getMensajes(req: Request, res: Response, next: NextFunction) {
     try {
       const turnoId = parseInt(req.params.id, 10);
-      // TODO: Podrías validar aquí también que el usuario tenga permiso de verlos
       const mensajes = await this._turnosService.getMensajesTurno(turnoId);
       res.status(200).json(mensajes);
     } catch (error) {
@@ -89,7 +97,7 @@ export class TurnosController {
     }
   }
 
-  // POST: Enviar mensaje
+  // Enviar mensaje
   @httpPost('/:id/mensajes', authenticateToken)
   public async enviarMensaje(req: Request, res: Response, next: NextFunction) {
     try {

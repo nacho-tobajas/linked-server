@@ -251,7 +251,7 @@ export class TurnosService implements ITurnosService {
    */
   public async enviarMensaje(turnoId: number, usuarioId: number, texto: string): Promise<TurnoMensaje> {
     
-    // 1. Validar que el turno existe
+    // Validar que el turno existe
     const turno = await this.turnoRepo.findOne({ 
         where: { id: turnoId },
         relations: { cliente: true, tatuadoresAsignados: { tatuador: true } }
@@ -259,7 +259,7 @@ export class TurnosService implements ITurnosService {
     
     if (!turno) throw new ValidationError("Turno no encontrado", 404);
 
-    // 2. Validar Seguridad: ¿El usuario es el cliente O el tatuador asignado?
+    // Validar Seguridad: ¿El usuario es el cliente O el tatuador asignado?
     const esCliente = turno.cliente?.id === usuarioId;
     const esTatuador = turno.tatuadoresAsignados?.some(tt => tt.tatuador?.id === usuarioId);
 
@@ -267,7 +267,6 @@ export class TurnosService implements ITurnosService {
         throw new ValidationError("No tienes permiso para comentar en este turno.", 403);
     }
 
-    // 3. Guardar el mensaje
     const usuario = await this.userRepo.findOneBy({ id: usuarioId });
     
     const nuevoMensaje = new TurnoMensaje();
