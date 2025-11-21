@@ -3,7 +3,9 @@ import { Trabajo } from '../../models/trabajos/trabajo.entity.js';
 import { TrabajoFavorito } from '../../models/trabajos/trabajo-favorito.entity.js';
 
 export interface ITrabajosRepository extends IBaseRepository<Trabajo> {
+    create(trabajo: Trabajo): Promise<Trabajo>;
     findByTatuadorId(tatuadorId: number): Promise<Trabajo[]>;
+    delete(id: number): Promise<Trabajo | undefined>;
     
     // Métodos para manejar los Likes (Favoritos)
     addFavorito(clienteId: number, trabajoId: number): Promise<TrabajoFavorito>;
