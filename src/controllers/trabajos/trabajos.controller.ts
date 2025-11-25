@@ -11,6 +11,17 @@ export class TrabajosController {
   
   constructor(@inject(TrabajosService) private trabajosService: TrabajosService) {}
 
+  //Feed global (publico)
+  @httpGet('/feed') 
+  public async getFeed(req: Request, res: Response, next: NextFunction) {
+    try {
+      const trabajos = await this.trabajosService.getAllTrabajosRecientes(); 
+      res.json(trabajos);
+    } catch (e) { 
+      next(e); 
+    }
+  }
+
   // Subir Trabajo (Tatuador)
   @httpPost('/', authenticateToken, authorizeRol('Tatuador'), uploadTrabajo.array('imagen', 5))
   public async subirTrabajo(req: Request, res: Response, next: NextFunction) {
@@ -66,7 +77,7 @@ export class TrabajosController {
   }
   
   // Obtener IDs de likes
-  @httpGet('/mis-favoritos/ids', authenticateToken, authorizeRol('Cliente'))
+  @httpGet('/mis-favoritos/ids', authenticateToken,)//  authorizeRol('Cliente')
   public async getMisLikes(req: Request, res: Response, next: NextFunction) {
       try {
           const clienteId = req.user?.id;

@@ -6,6 +6,7 @@ export interface ITrabajosRepository extends IBaseRepository<Trabajo> {
     create(trabajo: Trabajo): Promise<Trabajo>;
     findByTatuadorId(tatuadorId: number): Promise<Trabajo[]>;
     delete(id: number): Promise<Trabajo | undefined>;
+    findAllRecent(): Promise<Trabajo[]>;
     
     // Métodos para manejar los Likes (Favoritos)
     addFavorito(clienteId: number, trabajoId: number): Promise<TrabajoFavorito>;

@@ -17,8 +17,6 @@ export class TrabajosRepository implements ITrabajosRepository {
     this.favoritoRepository = AppDataSource.getRepository(TrabajoFavorito);
   }
 
-  // --- CRUD BÁSICO (Implementación de IBaseRepository) ---
-
   async findAll(): Promise<Trabajo[]> {
     try {
       return await this.repository.find({
@@ -41,6 +39,26 @@ export class TrabajosRepository implements ITrabajosRepository {
     } catch (error) {
       console.error(`Error al buscar trabajo ID ${id}`, error);
       throw new DatabaseErrorCustom("Trabajo no encontrado", 500);
+    }
+  }
+
+  async findAllRecent(): Promise<Trabajo[]> {
+    try {
+      return await this.repository.find({
+        relations: { 
+            tatuador: true, 
+            fotos: true,    
+            favoritos: true 
+        },
+        order: { 
+            creationtimestamp: 'DESC' 
+        },
+        // (Implementar paginacion....)
+        take: 50 
+      });
+    } catch (error) {
+      console.error("Error al cargar el feed:", error);
+      throw new DatabaseErrorCustom("Error al obtener las publicaciones recientes", 500);
     }
   }
 

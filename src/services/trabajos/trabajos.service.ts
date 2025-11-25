@@ -5,7 +5,6 @@ import { UserRepository } from '../../repositories/usuarios/user.dao.js'; // O u
 import { ITrabajosService } from '../../services/interfaces/trabajos/ITrabajosService.js';
 import { TrabajosRepository } from '../../repositories/trabajos/trabajos.dao.js';
 import { TrabajoFoto } from '../../models/trabajos/trabajo-foto.entity.js';
-
 @injectable()
 export class TrabajosService implements ITrabajosService {
   
@@ -13,6 +12,11 @@ export class TrabajosService implements ITrabajosService {
     @inject(TrabajosRepository) private trabajosRepo: TrabajosRepository,
     @inject(UserRepository) private userRepo: UserRepository
   ) {}
+
+  async getAllTrabajosRecientes(): Promise<Trabajo[]> {
+    const trabajos = await this.trabajosRepo.findAllRecent();
+    return trabajos;
+  }
 
   async subirTrabajo(tatuadorId: number, imagePaths: string[], descripcion: string, username: string): Promise<Trabajo> {
     
