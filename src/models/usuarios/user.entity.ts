@@ -87,7 +87,7 @@ export class User {
       referencedColumnName: 'id',
     },
   })
-  public especialidades?: Promise<Especialidades[]>;
+  public especialidades: Especialidades[] | undefined;
 
   // Relaciones
   public currentRol?: RolApl;
