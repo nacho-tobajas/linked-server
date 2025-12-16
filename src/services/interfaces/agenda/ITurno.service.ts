@@ -16,5 +16,6 @@ export interface ITurnosService extends IBaseService<TurnoSesion> {
     ): Promise<TurnoSesion>;
     enviarMensaje(turnoId: number, usuarioId: number, texto: string): Promise<TurnoMensaje>;
     getMensajesTurno(turnoId: number): Promise<TurnoMensaje[]>;
+    updateTurno(id: number, changes: { fecha_hora_inicio?: string, estado?: string }): Promise<TurnoSesion | null>;
 
 }

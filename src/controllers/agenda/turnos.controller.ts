@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { controller, httpGet, httpPost, httpPatch } from 'inversify-express-utils';
+import { controller, httpGet, httpPost, httpPatch, httpPut } from 'inversify-express-utils';
 import { inject } from 'inversify';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
 import { TurnosService } from '../../services/agenda/turno.service.js';
@@ -80,6 +80,24 @@ export class TurnosController {
 
       res.status(200).json(turnoActualizado);
 
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  @httpPut('/:id')
+  public async updateTurno(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = parseInt(req.params.id);
+      const datosActualizar = req.body; // { fecha_hora_inicio, estado }
+
+      const turnoActualizado = await this._turnosService.updateTurno(id, datosActualizar);
+      
+      if (turnoActualizado) {
+        res.status(200).json(turnoActualizado);
+      } else {
+        res.status(404).json({ message: 'Turno no encontrado' });
+      }
     } catch (error) {
       next(error);
     }

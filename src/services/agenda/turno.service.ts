@@ -183,6 +183,54 @@ export class TurnosService implements ITurnosService {
         return turno;
     }
 
+    async updateTurno(id: number, changes: { fecha_hora_inicio?: string, estado?: string }): Promise<TurnoSesion | null> {
+    
+    const turno = await this.turnoRepo.findOne({ 
+        where: { id: id },
+        relations: ['cliente', 'tatuadoresAsignados', 'tatuadoresAsignados.tatuador']});
+        if (!turno) return null;
+    if (changes.estado) {
+      turno.estado = changes.estado as any;
+    }
+
+    if (changes.fecha_hora_inicio) {
+      const nuevaFechaInicio = new Date(changes.fecha_hora_inicio);
+      if (nuevaFechaInicio < new Date()) {
+          throw new ValidationError("No puedes mover un turno al pasado.", 400);
+      }
+
+      if (turno.fecha_hora_fin && turno.fecha_hora_inicio) {
+          
+          const duracionMs = new Date(turno.fecha_hora_fin).getTime() - new Date(turno.fecha_hora_inicio).getTime();
+          const nuevaFechaFin = new Date(nuevaFechaInicio.getTime() + duracionMs);
+
+          if (turno.tatuadoresAsignados && turno.tatuadoresAsignados.length > 0) {
+             for (const asignacion of turno.tatuadoresAsignados) {
+                 if (asignacion.tatuador) {
+                     await this.validarDisponibilidad(
+                         asignacion.tatuador.id!, 
+                         nuevaFechaInicio, 
+                         nuevaFechaFin
+                     );
+                 }
+             }
+          }
+
+          turno.fecha_hora_inicio = nuevaFechaInicio;
+          turno.fecha_hora_fin = nuevaFechaFin;
+      }
+    }
+    await this.turnoRepo.update(id, {
+        fecha_hora_inicio: turno.fecha_hora_inicio,
+        fecha_hora_fin: turno.fecha_hora_fin,
+        estado: turno.estado
+    });
+    return await this.turnoRepo.findOne({
+        where: { id: id },
+        relations: ['cliente', 'tatuadoresAsignados', 'tatuadoresAsignados.tatuador', 'imagenes'] // Trae todo lo que usa el modal
+    });
+  }
+
 
     /**
      * Permite a un gestor (tatuador) cambiar el estado de un turno.
