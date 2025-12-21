@@ -184,14 +184,8 @@ export class UserMapper {
             userDto.antiguedad = undefined; 
         }
         
-
-
         // --- Mapping Especialidades ---
-         if (Array.isArray(entity.especialidades)) {
-             userDto.especialidades = entity.especialidades;
-         } else {
-             userDto.especialidades = undefined; 
-         }
+        userDto.especialidades = entity.especialidades ?? [];
 
         return userDto; 
     }

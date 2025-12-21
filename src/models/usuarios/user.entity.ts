@@ -9,17 +9,15 @@ import {
   Relation,
   OneToMany,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { UserAuth } from './user-auth.entity.js';
 import { UserRolApl } from './user-rol-apl.entity.js';
 import { RolApl } from '../roles/rol-apl.entity.js';
-<<<<<<< HEAD
-=======
 import { SupportTicket } from '../support-ticket/support-ticket.entity.js';
 import { TurnoSesion } from '../turno-sesion/turno-sesion.entity.js';
 import { Especialidades } from '../../models/especialidades/especialidades.entity.js';
 import { TurnoTatuador } from '../turno-tatuador/turno-tatuador.entity.js';
->>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
 
 @Entity('swe_usrapl') // El nombre de la tabla en la base de datos
 export class User {
@@ -32,53 +30,37 @@ export class User {
   @Column({ name: 'surname', type: 'varchar' })
   public surname: string | null | undefined;
 
-  @Column({ name: 'username', type: 'varchar', unique: true})
+  @Column({ name: 'username', type: 'varchar', unique: true })
   public username: string | undefined;
 
-  @Column({ name: 'email', type: 'varchar', length: 255, unique: true}) 
+  @Column({ name: 'email', type: 'varchar', length: 255, unique: true })
   public email: string | undefined;
 
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | null | undefined;
 
-<<<<<<< HEAD
-  @Column({ name: 'profile_photo', type: 'varchar' })
-  public profile_photo: string | undefined;
-=======
-  @Column({ name: 'profile_photo', type: 'varchar', nullable: true})
+  @Column({ name: 'profile_photo', type: 'varchar', nullable: true })
   public profile_photo: string | null | undefined;
 
   @Column({ name: 'estudio', type: 'varchar', length: 100, nullable: true })
-  public estudio: string | null | undefined; 
+  public estudio: string | null | undefined;
 
   @Column({ name: 'fecha_inicio_actividad', type: 'date', nullable: true })
-  public fecha_inicio_actividad: Date | null  | undefined; 
->>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
+  public fecha_inicio_actividad: Date | null | undefined;
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
   public delete_date: Date | null | undefined;
 
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser: string | undefined;
-<<<<<<< HEAD
-  //Nuevo
+
   @Column({ name: 'reset_password_token', type: 'varchar', length: 255 })
   public resetPasswordToken: string | undefined;
 
   @Column({ name: 'reset_password_expires', type: 'timestamp' })
   public resetPasswordExpires: Date | undefined;
-  //
-  @CreateDateColumn()
-=======
 
-  @Column({ name: 'reset_password_token', type: 'varchar', length: 255 })
-  public resetPasswordToken: string | undefined;
-
-  @Column({name: 'reset_password_expires', type: 'timestamp'})
-  public resetPasswordExpires: Date | undefined; 
-        
   @CreateDateColumn({ name: 'creationtimestamp' })
->>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
   public creationtimestamp: Date | undefined;
 
   @Column({ name: 'modificationuser', type: 'varchar', nullable: true })
@@ -91,6 +73,21 @@ export class User {
   @Column({ name: 'status', type: 'boolean' })
   public status: boolean | undefined;
 
+  @ManyToMany(() => Especialidades, (especialidad) => especialidad.tatuadores, {
+    eager: true,
+  })
+  @JoinTable({
+    name: 'tat_tatuador_especialidad', // nombre real de la tabla intermedia
+    joinColumn: {
+      name: 'id_tatuador',              // nombre de la columna FK hacia User
+      referencedColumnName: 'id',      // el campo PK en User
+    },
+    inverseJoinColumn: {
+      name: 'id_especialidad',         // nombre de la columna FK hacia Especialidades
+      referencedColumnName: 'id',
+    },
+  })
+  public especialidades: Especialidades[] | undefined;
 
   // Relaciones
   public currentRol?: RolApl;
@@ -108,16 +105,14 @@ export class User {
   @OneToMany(() => UserRolApl, (userRolApl) => userRolApl.user, { lazy: true })
   public userRolApl?: Promise<UserRolApl[]>;
 
-<<<<<<< HEAD
-=======
-  @ManyToMany(() => SupportTicket, (supportticket) => supportticket.user,{
+  @ManyToMany(() => SupportTicket, (supportticket) => supportticket.user, {
     nullable: true,
     lazy: true
   })
 
   public ticketlist?: Promise<SupportTicket[]>
 
-// Turnos donde este usuario es el CLIENTE
+  // Turnos donde este usuario es el CLIENTE
   @OneToMany(() => TurnoSesion, (turno) => turno.cliente)
   public turnosCliente?: Relation<TurnoSesion[]>;
 
@@ -125,7 +120,6 @@ export class User {
   @OneToMany(() => TurnoTatuador, (tt) => tt.tatuador)
   public turnosTatuador?: Relation<TurnoTatuador[]>;
 
->>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
   constructor(
     id?: number,
     realname?: string,
@@ -157,12 +151,8 @@ export class User {
     this.creationtimestamp = creationtimestamp;
     this.modificationuser = modificationuser;
     this.modificationtimestamp = modificationtimestamp;
-<<<<<<< HEAD
-    this.status = status;
-=======
     this.status = status ?? true;
     this.turnosCliente = turnosCliente;
     this.turnosTatuador = turnosTatuador;
->>>>>>> e3bc3c0078e05642f75fe739d0eb126635ae799b
   }
 }

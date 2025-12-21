@@ -12,6 +12,8 @@ import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplSe
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { UserRepository } from '../../repositories/usuarios/user.dao.js';
 import { UserRolRepository } from '../../repositories/usuarios/user-rol-apl.dao.js';
+import { TrabajosRepository } from '../../repositories/trabajos/trabajos.dao.js';
+import { TrabajosService } from '../../services/trabajos/trabajos.service.js';
 
 import { RolAplRepository } from '../../repositories/rol/rol-apl.dao.js';
 import { SweItemMenuController } from '../../controllers/sweitemmenu/sweitemmenu.controller.js';
@@ -37,6 +39,7 @@ import { ITurnoTatuadorRepository } from '../../repositories/interfaces/ITurnoTa
 import { TurnosController } from '../../controllers/agenda/turnos.controller.js';
 import { TurnosService } from '../../services/agenda/turno.service.js';
 import { ITurnosService } from '../../services/interfaces/agenda/ITurno.service.js';
+import { TrabajosController } from '../../controllers/trabajos/trabajos.controller.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -49,6 +52,7 @@ container.bind<EspecialidadesController>(EspecialidadesController).toSelf();
 container.bind<UserEspecialidadController>(UserEspecialidadController).toSelf();
 container.bind<AgendaController>(AgendaController).toSelf();
 container.bind<TurnosController>(TurnosController).toSelf();
+container.bind<TrabajosController>(TrabajosController).toSelf();
 
 // Repositorios
 //container.bind<UserAuthRepository>(UserAuthRepository).toSelf();
@@ -60,6 +64,7 @@ container.bind<SideMenuRepository>(SideMenuRepository).toSelf();
 container.bind<EspecialidadesRepository>(EspecialidadesRepository).toSelf();
 container.bind<HorarioHabitualRepository>(HorarioHabitualRepository).toSelf();
 container.bind<ITurnoTatuadorRepository>(TurnoTatuadorRepository).toSelf();
+container.bind<TrabajosRepository>(TrabajosRepository).toSelf();
 
 // Interfaces
 container.bind<IAuthService>(AuthService).to(AuthService);
@@ -74,6 +79,7 @@ container.bind<UserEspecialidadService>(UserEspecialidadService).toSelf();
 //container.bind<IAgendaService>(AgendaService).toSelf();
 container.bind<AgendaService>(AgendaService).toSelf();
 container.bind<ITurnosService>(TurnosService).toSelf();
+container.bind<TrabajosService>(TrabajosService).toSelf();
 
 //mappers
 container.bind<UserMapper>(UserMapper).toSelf();

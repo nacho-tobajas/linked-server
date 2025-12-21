@@ -42,7 +42,7 @@ export class UserEspecialidadService {
     await this.checkIsTatuador(user); // Metodo para solo asignar especialidades a tatuadores
 
     // Cargamos las especialidades actuales como array
-    const currentEspecialidades = await user.especialidades ?? [];
+    const currentEspecialidades = user.especialidades ?? [];
 
     // Limpiamos y asignamos nuevas
     const nuevasEspecialidades: Especialidades[] = [];
@@ -53,7 +53,7 @@ export class UserEspecialidadService {
     }
 
   // Asignamos las nuevas especialidades y guardamos usando el repositorio interno de TypeORM
-    user.especialidades = Promise.resolve(nuevasEspecialidades);
+    user.especialidades = nuevasEspecialidades;
     await (this.userRepo as any)._userRepo.save(user);
 
     return nuevasEspecialidades;
@@ -66,7 +66,7 @@ export class UserEspecialidadService {
 
     await this.checkIsTatuador(user);
 
-    const currentEspecialidades = await user.especialidades ?? [];
+    const currentEspecialidades = user.especialidades ?? [];
 
     const especialidad = await this.espRepo.findOne(especialidadId);
     if (!especialidad) throw new ValidationError("Especialidad no encontrada", 404);
@@ -74,7 +74,7 @@ export class UserEspecialidadService {
     // Solo agregamos si no existe
     if (!currentEspecialidades.find(e => e.id === especialidad.id)) {
       currentEspecialidades.push(especialidad);
-      user.especialidades = Promise.resolve(currentEspecialidades);
+      user.especialidades = currentEspecialidades;
       await (this.userRepo as any)._userRepo.save(user);
     }
 
@@ -88,10 +88,10 @@ export class UserEspecialidadService {
 
     await this.checkIsTatuador(user);
 
-    let currentEspecialidades = await user.especialidades ?? [];
+    let currentEspecialidades = user.especialidades ?? [];
 
     currentEspecialidades = currentEspecialidades.filter(e => e.id !== especialidadId);
-    user.especialidades = Promise.resolve(currentEspecialidades);
+    user.especialidades = currentEspecialidades;
     await (this.userRepo as any)._userRepo.save(user);
 
     return currentEspecialidades;
