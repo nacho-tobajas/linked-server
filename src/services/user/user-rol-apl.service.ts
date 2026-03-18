@@ -106,4 +106,9 @@ export class UserRolAplService implements IUserRolAplService {
         return created.rolApl!;
 
     }
+
+    async getUserRolByidRole(idRole: number): Promise<RolApl | undefined> {
+        return await this._rolAplRepository.findOne(idRole);
+    }
+
 }

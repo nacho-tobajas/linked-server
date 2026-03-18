@@ -144,6 +144,13 @@ export const getAllUserRolsValidationRules = [
     .withMessage('Formato de ID invalido'),
 ];
 
+export const getUserRolByidRoleValidationRules = [
+  param('idRole')
+    .notEmpty()
+    .isInt({ min: 1 })
+    .withMessage('Formato de ID invalido'),
+];
+
 export const getAllRolsValidationRules = [
   param('id')
     .notEmpty()
