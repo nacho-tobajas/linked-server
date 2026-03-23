@@ -111,6 +111,15 @@ export class TrabajosRepository implements ITrabajosRepository {
     }
   }
 
+  async findByInstagramMediaId(instagramMediaId: string): Promise<Trabajo | undefined> {
+    try {
+      const trabajo = await this.repository.findOne({ where: { instagram_media_id: instagramMediaId } });
+      return trabajo ?? undefined;
+    } catch (error) {
+      throw new DatabaseErrorCustom('Error al verificar duplicado de Instagram', 500);
+    }
+  }
+
   // --- MÉTODOS DE FAVORITOS (LIKES) ---
 
   async addFavorito(clienteId: number, trabajoId: number): Promise<TrabajoFavorito> {

@@ -1,66 +1,131 @@
-import { controller, httpGet } from 'inversify-express-utils';
+import { controller, httpGet, httpPost, httpDelete } from 'inversify-express-utils';
 import { Request, Response, NextFunction } from 'express';
-import axios from 'axios';
+import { inject } from 'inversify';
+import { InstagramService } from '../../services/instagram/instagram.service.js';
+import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
 
-@controller('/api/instagram/callback')
+@controller('/api/instagram')
 export class InstagramController {
 
-    // 1. El endpoint que inicia todo. Angular llamará acá cuando el tatuador haga clic en "Vincular Instagram"
-    @httpGet('/auth')
-    public loginWithInstagram(req: Request, res: Response) {
-        const appId = process.env.META_APP_ID;
-        const redirectUri = process.env.META_REDIRECT_URI;
+  constructor(@inject(InstagramService) private instagramService: InstagramService) { }
 
-        // Permisos que le vamos a pedir al tatuador (leer su info básica y ver las páginas de su negocio)
-        const scopes = 'instagram_basic,pages_show_list,pages_read_engagement';
+  /**
+   * GET /api/instagram/auth?tatuadorId=123
+   * Inicia el flujo OAuth de Meta. Angular redirige el navegador aquí con el ID del tatuador.
+   * Codificamos el tatuadorId en el parámetro `state` para recuperarlo en el callback.
+   */
+  @httpGet('/auth')
+  public loginWithInstagram(req: Request, res: Response) {
+    const tatuadorId = req.query.tatuadorId as string;
 
-        // Construimos la URL oficial de Facebook/Meta para pedir permisos
-        const facebookAuthUrl = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=code`;
-
-        // Redirigimos al usuario a la pantalla de Meta
-        res.redirect(facebookAuthUrl);
+    if (!tatuadorId || isNaN(Number(tatuadorId))) {
+      return res.status(400).json({ message: 'Se requiere el parámetro tatuadorId' });
     }
 
-    // 2. El endpoint que recibe a Meta de vuelta
-    @httpGet('/callback')
-    public async callbackInstagram(req: Request, res: Response, next: NextFunction) {
-        // Meta nos envía un código temporal por la URL
-        const code = req.query.code as string;
+    const appId = process.env.META_APP_ID;
+    const redirectUri = process.env.META_REDIRECT_URI;
+    const scopes = 'instagram_basic,pages_show_list,pages_read_engagement';
 
-        if (!code) {
-            return res.status(400).json({ message: 'No se recibió el código de autorización de Meta' });
-        }
+    // Codificamos el tatuadorId en state para recuperarlo cuando Meta nos devuelva el callback
+    const state = Buffer.from(JSON.stringify({ tatuadorId })).toString('base64');
 
-        try {
-            const appId = process.env.META_APP_ID;
-            const appSecret = process.env.META_APP_SECRET;
-            const redirectUri = process.env.META_REDIRECT_URI;
+    const facebookAuthUrl =
+      `https://www.facebook.com/v19.0/dialog/oauth` +
+      `?client_id=${appId}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri!)}` +
+      `&scope=${scopes}` +
+      `&response_type=code` +
+      `&state=${state}`;
 
-            // Intercambiamos el código temporal por el Token de Acceso definitivo
-            const tokenResponse = await axios.get(`https://graph.facebook.com/v19.0/oauth/access_token`, {
-                params: {
-                    client_id: appId,
-                    redirect_uri: redirectUri,
-                    client_secret: appSecret,
-                    code: code
-                }
-            });
+    res.redirect(facebookAuthUrl);
+  }
 
-            const accessToken = tokenResponse.data.access_token;
+  /**
+   * GET /api/instagram/callback
+   * Meta redirige aquí con el `code` y el `state` después de que el usuario autoriza.
+   * Intercambia el code por un token de larga duración y lo persiste en la BD.
+   * (Este endpoint debe coincidir con META_REDIRECT_URI en el .env)
+   */
+  @httpGet('/callback')
+  public async callbackInstagram(req: Request, res: Response, next: NextFunction) {
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+    const error = req.query.error as string;
 
-            // ¡ÉXITO! Ya tenemos la llave de acceso.
-            console.log('Token obtenido con éxito:', accessToken);
+    const frontendUrl = (process.env.FRONT_BASE_URL ?? 'http://localhost:4200/').replace(/\/$/, '');
 
-            // TODO: Acá deberás guardar este 'accessToken' en tu base de datos, 
-            // asociándolo al tatuador correspondiente.
-
-            // Finalmente, redirigimos al tatuador de vuelta a tu frontend de Angular
-            // Podés enviarle un parámetro por URL para que Angular sepa que todo salió bien
-            res.redirect('http://localhost:4200/panel-admin?instagram=success');
-
-        } catch (error: any) {
-            console.error('Error obteniendo el token de Meta:', error.response?.data || error.message);
-            res.status(500).json({ message: 'Error en la autenticación con Instagram' });
-        }
+    // El usuario canceló el acceso en Meta
+    if (error) {
+      return res.redirect(`${frontendUrl}/info?instagram=denied`);
     }
+
+    if (!code || !state) {
+      return res.status(400).json({ message: 'Parámetros incompletos en el callback de Meta' });
+    }
+
+    try {
+      const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+      const tatuadorId = Number(decoded.tatuadorId);
+
+      if (!tatuadorId || isNaN(tatuadorId)) {
+        return res.status(400).json({ message: 'State inválido en el callback de Meta' });
+      }
+
+      await this.instagramService.processOAuthCallback(code, tatuadorId);
+
+      res.redirect(`${frontendUrl}/info?instagram=success`);
+
+    } catch (err: any) {
+      console.error('Error en el callback de Instagram:', err?.response?.data ?? err.message);
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/instagram/sync
+   * Sincroniza los posts de Instagram del tatuador autenticado como Trabajos en la BD.
+   */
+  @httpPost('/sync', authenticateToken, authorizeRol('Tatuador'))
+  public async syncPosts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tatuadorId = req.user?.id!;
+      const result = await this.instagramService.syncInstagramPosts(tatuadorId);
+      res.json({
+        message: `Sincronización completada: ${result.synced} nuevos posts importados, ${result.skipped} omitidos.`,
+        ...result
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * GET /api/instagram/status
+   * Retorna si el tatuador autenticado tiene su cuenta de Instagram vinculada.
+   */
+  @httpGet('/status', authenticateToken, authorizeRol('Tatuador'))
+  public async getStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tatuadorId = req.user?.id!;
+      const status = await this.instagramService.getInstagramStatus(tatuadorId);
+      res.json(status);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * DELETE /api/instagram/disconnect
+   * Desvincula la cuenta de Instagram del tatuador autenticado.
+   */
+  @httpDelete('/disconnect', authenticateToken, authorizeRol('Tatuador'))
+  public async disconnect(req: Request, res: Response, next: NextFunction) {
+    try {
+      const tatuadorId = req.user?.id!;
+      await this.instagramService.disconnectInstagram(tatuadorId);
+      res.json({ message: 'Cuenta de Instagram desvinculada correctamente.' });
+    } catch (err) {
+      next(err);
+    }
+  }
 }

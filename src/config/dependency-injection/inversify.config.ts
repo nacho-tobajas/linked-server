@@ -40,6 +40,9 @@ import { TurnosController } from '../../controllers/agenda/turnos.controller.js'
 import { TurnosService } from '../../services/agenda/turno.service.js';
 import { ITurnosService } from '../../services/interfaces/agenda/ITurno.service.js';
 import { TrabajosController } from '../../controllers/trabajos/trabajos.controller.js';
+import { InstagramController } from '../../controllers/instagram/instagram.controller.js';
+import { InstagramService } from '../../services/instagram/instagram.service.js';
+import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -53,6 +56,7 @@ container.bind<UserEspecialidadController>(UserEspecialidadController).toSelf();
 container.bind<AgendaController>(AgendaController).toSelf();
 container.bind<TurnosController>(TurnosController).toSelf();
 container.bind<TrabajosController>(TrabajosController).toSelf();
+container.bind<InstagramController>(InstagramController).toSelf();
 
 // Repositorios
 //container.bind<UserAuthRepository>(UserAuthRepository).toSelf();
@@ -65,6 +69,7 @@ container.bind<EspecialidadesRepository>(EspecialidadesRepository).toSelf();
 container.bind<HorarioHabitualRepository>(HorarioHabitualRepository).toSelf();
 container.bind<ITurnoTatuadorRepository>(TurnoTatuadorRepository).toSelf();
 container.bind<TrabajosRepository>(TrabajosRepository).toSelf();
+container.bind<InstagramRepository>(InstagramRepository).toSelf();
 
 // Interfaces
 container.bind<IAuthService>(AuthService).to(AuthService);
@@ -80,6 +85,7 @@ container.bind<UserEspecialidadService>(UserEspecialidadService).toSelf();
 container.bind<AgendaService>(AgendaService).toSelf();
 container.bind<ITurnosService>(TurnosService).toSelf();
 container.bind<TrabajosService>(TrabajosService).toSelf();
+container.bind<InstagramService>(InstagramService).toSelf();
 
 //mappers
 container.bind<UserMapper>(UserMapper).toSelf();

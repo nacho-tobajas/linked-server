@@ -33,4 +33,8 @@ export class Trabajo {
   
   @Column({ name: 'creationuser', type: 'varchar' })
   public creationuser?: string;
+
+  // ID del post de Instagram (null si fue subido manualmente)
+  @Column({ name: 'instagram_media_id', type: 'varchar', nullable: true, unique: true })
+  public instagram_media_id?: string;
 }
