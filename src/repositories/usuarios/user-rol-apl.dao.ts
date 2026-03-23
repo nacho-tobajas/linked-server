@@ -51,7 +51,4 @@ export class UserRolRepository {
     }
   }
 
-  async deleteByUserId(idUser: number): Promise<void> {
-    await this._userRolRepo.delete({ idUsrapl: idUser });
-}
 }

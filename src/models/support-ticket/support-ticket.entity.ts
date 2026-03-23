@@ -9,14 +9,14 @@ export class SupportTicket {
     @PrimaryGeneratedColumn()
     public id?: number;
 
-    @Column({type: "boolean"})
+    @Column({ type: "boolean" })
     public status: boolean;
 
     @Column()
     public creationuser: string;
 
     @Column({ name: "description" })
-    public description: string; 
+    public description: string;
 
     @CreateDateColumn()
     public creationtimestamp: Date;
@@ -27,17 +27,17 @@ export class SupportTicket {
     @UpdateDateColumn({ nullable: true })
     public modificationtimestamp?: Date;
 
-  
 
-    @ManyToMany(() => User, (user) => user.ticketlist,{
+
+    @ManyToMany(() => User, (user) => user.ticketlist, {
         nullable: true,
         lazy: true
     })
 
     @JoinTable({
         name: 'hd_usr_st', //tabla intermedia
-        joinColumn: {name:'id_ticket' , referencedColumnName: 'id'},
-        inverseJoinColumn: {name:'id_user' , referencedColumnName: 'id' },
+        joinColumn: { name: 'id_ticket', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'id_user', referencedColumnName: 'id' },
     })
     public user?: Promise<User>
 
@@ -60,4 +60,3 @@ export class SupportTicket {
         this.id = id;
     }
 }
-

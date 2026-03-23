@@ -4,7 +4,7 @@ import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { inject } from 'inversify';
 import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut, BaseHttpController } from 'inversify-express-utils';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
-import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
+import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserRolByidRoleValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
 import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
@@ -103,8 +103,8 @@ export class UserController extends BaseHttpController {
             realname: req.body.realname,
             surname: req.body.surname,
             username: req.body.username,
-            profile_photo: undefined,
             birth_date: req.body.birth_date,
+            profile_photo: req.body.profile_photo,
             creationuser: req.body.creationuser,
             creationtimestamp: undefined,
             password: this.authCryptography.decrypt(req.body.password),
@@ -194,11 +194,7 @@ export class UserController extends BaseHttpController {
             //Busca el usuario por el email
             const user = await this._userService.findByEmail(email);
 
-            if (user === undefined) {
-                return res.status(404).json({ message: "El correo ingresado no está registrado" });
-            }
-
-            else {
+            if (user) {
                 //Genero un token aleatorio
                 const crypto = await import('crypto');
                 const token = crypto.randomBytes(32).toString('hex');
@@ -219,8 +215,8 @@ export class UserController extends BaseHttpController {
                 }
 
                 await this._userService.sendResetPass(user.email, token);
-                return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
             }
+            return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
         } catch (error) {
             next(error);
         }
@@ -319,6 +315,20 @@ export class UserController extends BaseHttpController {
 
     }
 
+    @httpGet('/getUserRolByidRole/:idRole')
+    public async getUserRolByIdRole(req: Request, res: Response, next: NextFunction) {
+        const idRole = parseInt(req.params.idRole, 10);
 
+        try {
+            const userRol = await this._userRolAplService.getUserRolByidRole(idRole);
+            if (userRol) {
+                res.status(200).json(userRol);
+            } else {
+                res.status(404).json({ message: 'Rol no encontrado' });
+            }
+        } catch (error) {
+            next(error);
+        }
+    }
 
 }

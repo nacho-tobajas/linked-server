@@ -63,4 +63,10 @@ export class TrabajosService implements ITrabajosService {
   async getMisLikesIds(clienteId: number): Promise<number[]> {
     return this.trabajosRepo.findFavoritosIdsByCliente(clienteId);
   }
+
+  async getTrabajoById(trabajoId: number): Promise<Trabajo> {
+    const trabajo = await this.trabajosRepo.findOne(trabajoId);
+    if (!trabajo) throw new ValidationError('Trabajo no encontrado', 404);
+    return trabajo;
+  }
 }

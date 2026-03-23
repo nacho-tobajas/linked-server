@@ -1,8 +1,6 @@
 import multer from "multer";
 import path from "path";
 import fs from 'fs';
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "./cloudinary.config.js";
 
 // Variable para alternar entre Cloudinary o local
 const USE_CLOUDINARY = false; // cambia a true si querés Cloudinary

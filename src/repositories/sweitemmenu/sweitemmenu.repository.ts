@@ -66,15 +66,14 @@ export class SideMenuRepository implements IBaseRepository<SweItemMenu> {
     }
 
     async update(id: number, sweItemMenu: SweItemMenu) {
-        //arma la query de actualizcion
         const query =
             `UPDATE swe_itemmenu si
                 SET
                     modificationuser = current_user,
-                    modificationtimestamp = current_timestamp,
-                WHERE st.id = $2
+                    modificationtimestamp = current_timestamp
+                WHERE si.id = $1
                 RETURNING *;`;
-        const values = [status, id];
+        const values = [id];
 
         const client = await pool.connect();
 

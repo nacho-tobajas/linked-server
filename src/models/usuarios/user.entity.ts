@@ -30,23 +30,23 @@ export class User {
   @Column({ name: 'surname', type: 'varchar' })
   public surname: string | null | undefined;
 
-  @Column({ name: 'username', type: 'varchar', unique: true})
+  @Column({ name: 'username', type: 'varchar', unique: true })
   public username: string | undefined;
 
-  @Column({ name: 'email', type: 'varchar', length: 255, unique: true}) 
+  @Column({ name: 'email', type: 'varchar', length: 255, unique: true })
   public email: string | undefined;
 
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | null | undefined;
 
-  @Column({ name: 'profile_photo', type: 'varchar', nullable: true})
+  @Column({ name: 'profile_photo', type: 'varchar', nullable: true })
   public profile_photo: string | null | undefined;
 
   @Column({ name: 'estudio', type: 'varchar', length: 100, nullable: true })
-  public estudio: string | null | undefined; 
+  public estudio: string | null | undefined;
 
   @Column({ name: 'fecha_inicio_actividad', type: 'date', nullable: true })
-  public fecha_inicio_actividad: Date | null  | undefined; 
+  public fecha_inicio_actividad: Date | null | undefined;
 
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
   public delete_date: Date | null | undefined;
@@ -57,9 +57,9 @@ export class User {
   @Column({ name: 'reset_password_token', type: 'varchar', length: 255 })
   public resetPasswordToken: string | undefined;
 
-  @Column({name: 'reset_password_expires', type: 'timestamp'})
-  public resetPasswordExpires: Date | undefined; 
-        
+  @Column({ name: 'reset_password_expires', type: 'timestamp' })
+  public resetPasswordExpires: Date | undefined;
+
   @CreateDateColumn({ name: 'creationtimestamp' })
   public creationtimestamp: Date | undefined;
 
@@ -91,7 +91,9 @@ export class User {
 
   // Relaciones
   public currentRol?: RolApl;
+
   public currentRolId?: number;
+
   public currentRolDescription?: string;
 
   @OneToOne(() => UserAuth, (userauth) => userauth.user, {
@@ -103,14 +105,14 @@ export class User {
   @OneToMany(() => UserRolApl, (userRolApl) => userRolApl.user, { lazy: true })
   public userRolApl?: Promise<UserRolApl[]>;
 
-  @ManyToMany(() => SupportTicket, (supportticket) => supportticket.user,{
+  @ManyToMany(() => SupportTicket, (supportticket) => supportticket.user, {
     nullable: true,
     lazy: true
   })
 
   public ticketlist?: Promise<SupportTicket[]>
 
-// Turnos donde este usuario es el CLIENTE
+  // Turnos donde este usuario es el CLIENTE
   @OneToMany(() => TurnoSesion, (turno) => turno.cliente)
   public turnosCliente?: Relation<TurnoSesion[]>;
 
@@ -126,6 +128,7 @@ export class User {
     email?: string, // Agregado
     birth_date?: Date,
     profile_photo?: string,
+    especialidad?: string,
     delete_date?: Date,
     creationuser?: string,
     creationtimestamp?: Date,
@@ -144,7 +147,7 @@ export class User {
     this.profile_photo = profile_photo;
     this.birth_date = birth_date;
     this.delete_date = delete_date;
-    this.creationuser = creationuser ?? 'system';
+    this.creationuser = creationuser;
     this.creationtimestamp = creationtimestamp;
     this.modificationuser = modificationuser;
     this.modificationtimestamp = modificationtimestamp;
@@ -152,6 +155,4 @@ export class User {
     this.turnosCliente = turnosCliente;
     this.turnosTatuador = turnosTatuador;
   }
-
-
 }
