@@ -40,9 +40,6 @@ import { TurnosController } from '../../controllers/agenda/turnos.controller.js'
 import { TurnosService } from '../../services/agenda/turno.service.js';
 import { ITurnosService } from '../../services/interfaces/agenda/ITurno.service.js';
 import { TrabajosController } from '../../controllers/trabajos/trabajos.controller.js';
-import { InstagramController } from '../../controllers/instagram/instagram.controller.js';
-import { InstagramService } from '../../services/instagram/instagram.service.js';
-import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -56,7 +53,6 @@ container.bind<UserEspecialidadController>(UserEspecialidadController).toSelf();
 container.bind<AgendaController>(AgendaController).toSelf();
 container.bind<TurnosController>(TurnosController).toSelf();
 container.bind<TrabajosController>(TrabajosController).toSelf();
-container.bind<InstagramController>(InstagramController).toSelf();
 
 // Repositorios
 container.bind<UserRolRepository>(UserRolRepository).toSelf();
@@ -66,7 +62,6 @@ container.bind<EspecialidadesRepository>(EspecialidadesRepository).toSelf();
 container.bind<HorarioHabitualRepository>(HorarioHabitualRepository).toSelf();
 container.bind<ITurnoTatuadorRepository>(TurnoTatuadorRepository).toSelf();
 container.bind<TrabajosRepository>(TrabajosRepository).toSelf();
-container.bind<InstagramRepository>(InstagramRepository).toSelf();
 
 // Interfaces
 container.bind<IAuthService>(AuthService).to(AuthService);
@@ -75,23 +70,12 @@ container.bind<IPasswordService>(PasswordService).to(PasswordService);
 container.bind<IUserRolAplService>(UserRolAplService).to(UserRolAplService);
 container.bind<ISweItemMenuService>(SweItemMenuService).to(SweItemMenuService);
 container.bind<IUserRepository>(UserRepository).to(UserRepository);
-<<<<<<< HEAD
-container.bind<IUserAuthRepository>(UserAuthRepository).toSelf();
-container.bind<IEspecialidadesService>(EspecialidadesService).toSelf();
-container.bind<UserEspecialidadService>(UserEspecialidadService).toSelf();
-//container.bind<IAgendaService>(AgendaService).toSelf();
-container.bind<AgendaService>(AgendaService).toSelf();
-container.bind<ITurnosService>(TurnosService).toSelf();
-container.bind<TrabajosService>(TrabajosService).toSelf();
-container.bind<InstagramService>(InstagramService).toSelf();
-=======
 container.bind<IUserAuthRepository>(UserAuthRepository).to(UserAuthRepository);
 container.bind<IEspecialidadesService>(EspecialidadesService).to(EspecialidadesService);
 container.bind<UserEspecialidadService>(UserEspecialidadService).to(UserEspecialidadService);
 container.bind<IAgendaService>(AgendaService).to(AgendaService);
 container.bind<ITurnosService>(TurnosService).to(TurnosService);
 container.bind<TrabajosService>(TrabajosService).to(TrabajosService);
->>>>>>> c26712075750dc57e974ec760f891a6d93041360
 
 //mappers
 container.bind<UserMapper>(UserMapper).toSelf();
