@@ -2,7 +2,7 @@
   "name": "dmcoffers-server-main",
   "version": "1.4.1",
   "type": "module",
-  "description": "Proyecto para DSW-UTN",
+  "description": "Proyecto para SI-UTN",
   "main": "index.ts",
   "scripts": {
     "test-watch": "jest --watch",

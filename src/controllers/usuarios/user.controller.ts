@@ -2,12 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../../services/user/user.service.js';
 import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { inject } from 'inversify';
-import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut } from 'inversify-express-utils';
+import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut, BaseHttpController } from 'inversify-express-utils';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
 import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserRolByidRoleValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
-import { OkNegotiatedContentResult } from 'inversify-express-utils/lib/results/OkNegotiatedContentResult.js';
-import { JsonResult } from 'inversify-express-utils/lib/results/JsonResult.js';
 import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
@@ -16,7 +14,7 @@ import { uploadUser } from '../../config/cloudinary/multer.config.js';
 import path from 'path';
 
 @controller('/api/users')
-export class UserController {
+export class UserController extends BaseHttpController {
     private _userService: IUserService;
     private _userRolAplService: IUserRolAplService;
 
@@ -28,6 +26,7 @@ export class UserController {
         @inject(UserService) userService: IUserService,
         @inject(UserRolAplService) userRolAplService: IUserRolAplService,
     ) {
+        super();
         this._userService = userService;
         this._userRolAplService = userRolAplService;
     }
@@ -40,7 +39,7 @@ export class UserController {
                 res.status(200).json(users);
                 //new OkNegotiatedContentResult(users);
             } else {
-                return new JsonResult({ message: 'No se han encontrado usuarios' }, 404);
+                return this.json({ message: 'No se han encontrado usuarios' }, 404);
             }
         } catch (error) {
             next(error);
