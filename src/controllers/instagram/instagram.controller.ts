@@ -1,8 +1,10 @@
 import { controller, httpGet, httpPost, httpDelete } from 'inversify-express-utils';
 import { Request, Response, NextFunction } from 'express';
 import { inject } from 'inversify';
+import jwt from 'jsonwebtoken';
 import { InstagramService } from '../../services/instagram/instagram.service.js';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
+import { secretKeyJWT } from '../../shared/Utils/Keys.js';
 
 @controller('/api/instagram')
 export class InstagramController {
@@ -17,27 +19,47 @@ export class InstagramController {
   @httpGet('/auth')
   public loginWithInstagram(req: Request, res: Response) {
     const tatuadorId = req.query.tatuadorId as string;
+    const token = req.query.token as string;
 
     if (!tatuadorId || isNaN(Number(tatuadorId))) {
       return res.status(400).json({ message: 'Se requiere el parámetro tatuadorId' });
     }
 
+    if (!token) {
+      return res.status(401).json({ message: 'Se requiere autenticación para vincular Instagram.' });
+    }
+
+    try {
+      const decoded = jwt.verify(token, secretKeyJWT) as { id: number; rol: string | string[] };
+      const roles = Array.isArray(decoded.rol) ? decoded.rol : [decoded.rol];
+
+      if (!roles.includes('Tatuador')) {
+        return res.status(403).json({ message: 'Solo los tatuadores pueden vincular su cuenta de Instagram.' });
+      }
+
+      if (decoded.id !== Number(tatuadorId)) {
+        return res.status(403).json({ message: 'No tenés permiso para vincular esta cuenta.' });
+      }
+    } catch {
+      return res.status(403).json({ message: 'Token de autenticación inválido.' });
+    }
+
     const appId = process.env.META_APP_ID;
     const redirectUri = process.env.META_REDIRECT_URI;
-    const scopes = 'instagram_basic,pages_show_list,pages_read_engagement';
+    const scopes = 'instagram_business_basic';
 
     // Codificamos el tatuadorId en state para recuperarlo cuando Meta nos devuelva el callback
     const state = Buffer.from(JSON.stringify({ tatuadorId })).toString('base64');
 
-    const facebookAuthUrl =
-      `https://www.facebook.com/v19.0/dialog/oauth` +
+    const instagramAuthUrl =
+      `https://api.instagram.com/oauth/authorize` +
       `?client_id=${appId}` +
       `&redirect_uri=${encodeURIComponent(redirectUri!)}` +
       `&scope=${scopes}` +
       `&response_type=code` +
       `&state=${state}`;
 
-    res.redirect(facebookAuthUrl);
+    res.redirect(instagramAuthUrl);
   }
 
   /**
@@ -77,7 +99,8 @@ export class InstagramController {
 
     } catch (err: any) {
       console.error('Error en el callback de Instagram:', err?.response?.data ?? err.message);
-      next(err);
+      const reason = err?.name === 'ValidationError' ? 'no_business_account' : 'unknown';
+      return res.redirect(`${frontendUrl}/info?instagram=error&reason=${reason}`);
     }
   }
 

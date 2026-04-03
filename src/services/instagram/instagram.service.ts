@@ -7,8 +7,9 @@ import { Trabajo } from '../../models/trabajos/trabajo.entity.js';
 import { TrabajoFoto } from '../../models/trabajos/trabajo-foto.entity.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
 
-const GRAPH_API_VERSION = 'v19.0';
-const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
+const GRAPH_API_VERSION = 'v21.0';
+const INSTAGRAM_OAUTH_BASE = 'https://api.instagram.com';
+const INSTAGRAM_GRAPH_BASE = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 
 interface InstagramMedia {
   id: string;
@@ -41,43 +42,57 @@ export class InstagramService {
     const appSecret = process.env.META_APP_SECRET!;
     const redirectUri = process.env.META_REDIRECT_URI!;
 
-    // 1. Intercambiar code por token de corta duración
-    const shortTokenResponse = await axios.get(`${GRAPH_BASE_URL}/oauth/access_token`, {
-      params: {
+    // 1. Intercambiar code por token (POST form-encoded)
+    console.log('[Instagram] Paso 1: intercambiando code por token...');
+    const shortTokenResponse = await axios.post(
+      `${INSTAGRAM_OAUTH_BASE}/oauth/access_token`,
+      new URLSearchParams({
         client_id: appId,
+        client_secret: appSecret,
+        grant_type: 'authorization_code',
         redirect_uri: redirectUri,
-        client_secret: appSecret,
         code
-      }
-    });
-    const shortLivedToken: string = shortTokenResponse.data.access_token;
+      }).toString(),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+    );
+    console.log('[Instagram] Paso 1 OK - respuesta:', JSON.stringify(shortTokenResponse.data));
 
-    // 2. Intercambiar por token de larga duración (dura ~60 días)
-    const longTokenResponse = await axios.get(`${GRAPH_BASE_URL}/oauth/access_token`, {
-      params: {
-        grant_type: 'fb_exchange_token',
-        client_id: appId,
-        client_secret: appSecret,
-        fb_exchange_token: shortLivedToken
-      }
-    });
-    const longLivedToken: string = longTokenResponse.data.access_token;
-    const expiresInSeconds: number = longTokenResponse.data.expires_in ?? 5183944; // ~60 días
+    const tokenFromStep1: string = shortTokenResponse.data.access_token;
+    const expiresInFromStep1: number = shortTokenResponse.data.expires_in ?? 3600;
+    const instagramUserId: string = String(shortTokenResponse.data.user_id);
 
-    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
-
-    // 3. Obtener el Instagram Business Account ID del tatuador
-    const instagramUserId = await this.getInstagramBusinessAccountId(longLivedToken);
-    if (!instagramUserId) {
-      throw new ValidationError(
-        'No se encontró una cuenta de Instagram Business asociada a las páginas de Facebook del usuario. ' +
-        'Asegurate de que tu cuenta de Instagram esté conectada a una Página de Facebook.',
-        422
-      );
+    if (!tokenFromStep1) {
+      throw new ValidationError('No se recibió access_token en el paso 1.', 422);
     }
 
-    // 4. Guardar en la base de datos
-    await this.instagramRepo.saveOrUpdate(tatuadorId, longLivedToken, instagramUserId, expiresAt);
+    // 2. Intentar intercambiar por token de larga duración (~60 días)
+    // Con instagram_business_basic el paso 1 puede devolver ya un token de larga duración,
+    // en cuyo caso este paso falla y usamos directamente el token del paso 1.
+    let finalToken = tokenFromStep1;
+    let finalExpiresIn = expiresInFromStep1;
+
+    try {
+      console.log('[Instagram] Paso 2: intentando obtener token de larga duración...');
+      const longTokenResponse = await axios.get(`https://graph.instagram.com/access_token`, {
+        params: {
+          grant_type: 'ig_exchange_token',
+          client_id: appId,
+          client_secret: appSecret,
+          access_token: tokenFromStep1
+        }
+      });
+      finalToken = longTokenResponse.data.access_token;
+      finalExpiresIn = longTokenResponse.data.expires_in ?? 5183944;
+      console.log('[Instagram] Paso 2 OK - token de larga duración obtenido, expira en:', finalExpiresIn, 's');
+    } catch (err: any) {
+      console.warn('[Instagram] Paso 2 omitido (usando token del paso 1):', err?.response?.data ?? err.message);
+    }
+
+    const expiresAt = new Date(Date.now() + finalExpiresIn * 1000);
+
+    // 3. Guardar en la base de datos
+    await this.instagramRepo.saveOrUpdate(tatuadorId, finalToken, instagramUserId, expiresAt);
+    console.log('[Instagram] Paso 3 OK - vinculación guardada para tatuadorId:', tatuadorId);
   }
 
   /**
@@ -96,7 +111,14 @@ export class InstagramService {
       throw new ValidationError('Tatuador no encontrado.', 404);
     }
 
-    const mediaList = await this.fetchInstagramMedia(tokenRecord.instagram_user_id, tokenRecord.access_token);
+    let mediaList: InstagramMedia[];
+    try {
+      mediaList = await this.fetchInstagramMedia(tokenRecord.instagram_user_id, tokenRecord.access_token);
+    } catch (err: any) {
+      console.error('[Instagram] fetchMedia falló - status:', err?.response?.status);
+      console.error('[Instagram] fetchMedia falló - body:', JSON.stringify(err?.response?.data));
+      throw err;
+    }
 
     let synced = 0;
     let skipped = 0;
@@ -161,40 +183,14 @@ export class InstagramService {
   // ─── Métodos privados ──────────────────────────────────────────────────────
 
   /**
-   * Obtiene el IG Business Account ID a través de las Páginas de Facebook del usuario.
+   * Obtiene la lista de medios de la cuenta de Instagram.
    */
-  private async getInstagramBusinessAccountId(accessToken: string): Promise<string | null> {
-    const pagesResponse = await axios.get(`${GRAPH_BASE_URL}/me/accounts`, {
-      params: { access_token: accessToken }
-    });
-
-    const pages: { id: string; access_token: string }[] = pagesResponse.data.data ?? [];
-
-    for (const page of pages) {
-      const pageResponse = await axios.get(`${GRAPH_BASE_URL}/${page.id}`, {
-        params: {
-          fields: 'instagram_business_account',
-          access_token: page.access_token
-        }
-      });
-
-      const igAccount = pageResponse.data.instagram_business_account;
-      if (igAccount?.id) {
-        return igAccount.id as string;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Obtiene la lista de medios del IG Business Account.
-   */
-  private async fetchInstagramMedia(instagramUserId: string, accessToken: string): Promise<InstagramMedia[]> {
-    const response = await axios.get(`${GRAPH_BASE_URL}/${instagramUserId}/media`, {
+  private async fetchInstagramMedia(_instagramUserId: string, accessToken: string): Promise<InstagramMedia[]> {
+    console.log(`[Instagram] fetchMedia → URL: ${INSTAGRAM_GRAPH_BASE}/me/media`);
+    const response = await axios.get(`${INSTAGRAM_GRAPH_BASE}/me/media`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
       params: {
         fields: 'id,caption,media_type,media_url,thumbnail_url,timestamp',
-        access_token: accessToken,
         limit: 50
       }
     });
@@ -215,11 +211,9 @@ export class InstagramService {
 
     } else if (media.media_type === 'CAROUSEL_ALBUM') {
       // Obtener las imágenes hijas del carrusel
-      const childrenResponse = await axios.get(`${GRAPH_BASE_URL}/${media.id}/children`, {
-        params: {
-          fields: 'id,media_type,media_url',
-          access_token: accessToken
-        }
+      const childrenResponse = await axios.get(`${INSTAGRAM_GRAPH_BASE}/${media.id}/children`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        params: { fields: 'id,media_type,media_url' }
       });
 
       const children: { id: string; media_type: string; media_url?: string }[] = childrenResponse.data.data ?? [];
