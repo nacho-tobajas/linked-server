@@ -54,4 +54,24 @@ export class InstagramRepository {
       throw new DatabaseErrorCustom('Error al desconectar Instagram', 500);
     }
   }
+
+  /** Retorna todos los registros con token guardado, independientemente de si expiraron. */
+  async findAllActive(): Promise<InstagramToken[]> {
+    try {
+      return await this.repository.find({ relations: { tatuador: true } });
+    } catch (error) {
+      throw new DatabaseErrorCustom('Error al obtener tokens de Instagram', 500);
+    }
+  }
+
+  async updateToken(tatuadorId: number, accessToken: string, expiresAt: Date): Promise<void> {
+    try {
+      await this.repository.update(
+        { tatuador: { id: tatuadorId } },
+        { access_token: accessToken, token_expires_at: expiresAt }
+      );
+    } catch (error) {
+      throw new DatabaseErrorCustom('Error al actualizar token de Instagram', 500);
+    }
+  }
 }

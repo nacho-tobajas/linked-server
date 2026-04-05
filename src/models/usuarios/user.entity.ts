@@ -39,7 +39,7 @@ export class User {
   @Column({ name: 'birth_date', type: 'timestamp' })
   public birth_date: Date | null | undefined;
 
-  @Column({ name: 'profile_photo', type: 'varchar', nullable: true })
+  @Column({ name: 'profile_photo', type: 'text', nullable: true })
   public profile_photo: string | null | undefined;
 
   @Column({ name: 'estudio', type: 'varchar', length: 100, nullable: true })

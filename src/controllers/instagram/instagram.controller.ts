@@ -93,7 +93,14 @@ export class InstagramController {
         return res.status(400).json({ message: 'State inválido en el callback de Meta' });
       }
 
-      await this.instagramService.processOAuthCallback(code, tatuadorId);
+      const isLongLived = await this.instagramService.processOAuthCallback(code, tatuadorId);
+
+      // Solo sincronizar si el token de larga duración fue obtenido correctamente
+      if (isLongLived) {
+        this.instagramService.syncInstagramPosts(tatuadorId).catch(err =>
+          console.error('[Instagram] Auto-sync tras vinculación falló:', err?.message ?? err)
+        );
+      }
 
       res.redirect(`${frontendUrl}/info?instagram=success`);
 
@@ -114,7 +121,7 @@ export class InstagramController {
       const tatuadorId = req.user?.id!;
       const result = await this.instagramService.syncInstagramPosts(tatuadorId);
       res.json({
-        message: `Sincronización completada: ${result.synced} nuevos posts importados, ${result.skipped} omitidos.`,
+        message: `Sincronización completada: ${result.synced} nuevos, ${result.deleted} eliminados, ${result.skipped} omitidos.`,
         ...result
       });
     } catch (err) {

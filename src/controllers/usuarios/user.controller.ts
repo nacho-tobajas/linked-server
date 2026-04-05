@@ -12,6 +12,7 @@ import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
 import { uploadUser } from '../../config/cloudinary/multer.config.js';
 import path from 'path';
+import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
 
 @controller('/api/users')
 export class UserController extends BaseHttpController {
@@ -25,6 +26,7 @@ export class UserController extends BaseHttpController {
     constructor(
         @inject(UserService) userService: IUserService,
         @inject(UserRolAplService) userRolAplService: IUserRolAplService,
+        @inject(InstagramRepository) private instagramRepo: InstagramRepository,
     ) {
         super();
         this._userService = userService;
@@ -160,6 +162,14 @@ export class UserController extends BaseHttpController {
         const id = parseInt(req.params.id, 10);
 
         try {
+            // Bloquear edición manual si tiene Instagram vinculado
+            const igToken = await this.instagramRepo.findByTatuadorId(id);
+            if (igToken?.access_token) {
+                return res.status(403).json({
+                    message: 'Tu foto de perfil está sincronizada con Instagram y no puede editarse manualmente.'
+                });
+            }
+
             if (!req.file) {
                 return res.status(400).json({ message: 'No se proporcionó ninguna imagen' });
             }

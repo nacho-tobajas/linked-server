@@ -42,8 +42,10 @@ import { ITurnosService } from '../../services/interfaces/agenda/ITurno.service.
 import { TrabajosController } from '../../controllers/trabajos/trabajos.controller.js';
 import { InstagramController } from '../../controllers/instagram/instagram.controller.js';
 import { LegalController } from '../../controllers/legal/legal.controller.js';
+import { NewsController } from '../../controllers/news/news.controller.js';
 import { InstagramService } from '../../services/instagram/instagram.service.js';
 import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
+import { InstagramSchedulerService } from '../../services/instagram/instagram-scheduler.service.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -59,6 +61,7 @@ container.bind<TurnosController>(TurnosController).toSelf();
 container.bind<TrabajosController>(TrabajosController).toSelf();
 container.bind<InstagramController>(InstagramController).toSelf();
 container.bind<LegalController>(LegalController).toSelf();
+container.bind<NewsController>(NewsController).toSelf();
 
 // Repositorios
 container.bind<UserRolRepository>(UserRolRepository).toSelf();
@@ -84,6 +87,7 @@ container.bind<IAgendaService>(AgendaService).to(AgendaService);
 container.bind<ITurnosService>(TurnosService).to(TurnosService);
 container.bind<TrabajosService>(TrabajosService).to(TrabajosService);
 container.bind<InstagramService>(InstagramService).to(InstagramService);
+container.bind<InstagramSchedulerService>(InstagramSchedulerService).toSelf();
 
 //mappers
 container.bind<UserMapper>(UserMapper).toSelf();
