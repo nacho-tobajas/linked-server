@@ -114,6 +114,9 @@ export class UserController extends BaseHttpController {
             delete_date: req.body.delete_date,
             modificationuser: undefined,
             modificationtimestamp: undefined,
+            localidad: req.body.localidad ?? null,
+            lat: req.body.lat ?? null,
+            lng: req.body.lng ?? null,
         };
 
         try {

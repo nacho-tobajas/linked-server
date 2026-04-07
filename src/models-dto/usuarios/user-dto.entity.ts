@@ -20,9 +20,13 @@ export class UserDto {
     resetPasswordToken?: string | undefined;
     resetPasswordExpires?: Date | undefined;
     especialidades?: Especialidades[];
-    estudio?: string | null; 
-    fecha_inicio_actividad?: Date | null; 
+    estudio?: string | null;
+    fecha_inicio_actividad?: Date | null;
     antiguedad?: number | undefined;
+    localidad?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    instagram_handle?: string | null;
 
     constructor(
         idUser?: number,

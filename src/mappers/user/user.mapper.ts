@@ -39,6 +39,9 @@ export class UserMapper {
         userToCreate.creationtimestamp = newUser.creationtimestamp;
         userToCreate.modificationuser = newUser.modificationuser;
         userToCreate.modificationtimestamp = newUser.modificationtimestamp;
+        userToCreate.localidad = newUser.localidad ?? null;
+        userToCreate.lat = newUser.lat ?? null;
+        userToCreate.lng = newUser.lng ?? null;
         userToCreate.userauth = newUserAuth;
 
         return userToCreate;
@@ -83,6 +86,10 @@ export class UserMapper {
             delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
             modificationuser: userWithChanges.modificationuser,
             modificationtimestamp: new Date(),
+            localidad: getTextValue(userWithChanges.localidad, oldUser.localidad),
+            lat: userWithChanges.lat !== undefined ? userWithChanges.lat : oldUser.lat,
+            lng: userWithChanges.lng !== undefined ? userWithChanges.lng : oldUser.lng,
+            instagram_handle: getTextValue(userWithChanges.instagram_handle, oldUser.instagram_handle),
         };
 
         // Limpiar propiedades undefined para evitar problemas con TypeORM (opcional pero seguro)
@@ -109,7 +116,10 @@ export class UserMapper {
         userDto.creationtimestamp = entity.creationtimestamp;
         userDto.estudio = entity.estudio;
         userDto.fecha_inicio_actividad = entity.fecha_inicio_actividad;
-
+        userDto.localidad = entity.localidad;
+        userDto.lat = entity.lat;
+        userDto.lng = entity.lng;
+        userDto.instagram_handle = entity.instagram_handle;
 
         //Calculo de antiguedad
         if (entity.fecha_inicio_actividad) {

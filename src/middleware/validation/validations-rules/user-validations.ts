@@ -135,6 +135,26 @@ export const updateUserByAdminValidationRules = [
     .optional()
     .isString()
     .withMessage('rolDescription debe ser un string'),
+  body('estudio')
+    .optional({ nullable: true })
+    .isString()
+    .withMessage('estudio debe ser un string'),
+  body('fecha_inicio_actividad')
+    .optional({ nullable: true })
+    .isISO8601()
+    .withMessage('fecha_inicio_actividad debe ser una fecha válida'),
+  body('localidad')
+    .optional({ nullable: true })
+    .isString()
+    .withMessage('localidad debe ser un string'),
+  body('lat')
+    .optional({ nullable: true })
+    .isFloat()
+    .withMessage('lat debe ser un número'),
+  body('lng')
+    .optional({ nullable: true })
+    .isFloat()
+    .withMessage('lng debe ser un número'),
 ];
 
 export const getAllUserRolsValidationRules = [

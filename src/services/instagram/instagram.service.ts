@@ -240,10 +240,10 @@ export class InstagramService {
   async disconnectInstagram(tatuadorId: number): Promise<void> {
     await this.instagramRepo.deleteByTatuadorId(tatuadorId);
     try {
-      await this.userRepo.update(tatuadorId, { profile_photo: null });
-      console.log('[Instagram] Foto de perfil limpiada para tatuadorId:', tatuadorId);
+      await this.userRepo.update(tatuadorId, { profile_photo: null, instagram_handle: null });
+      console.log('[Instagram] Foto de perfil e Instagram handle limpiados para tatuadorId:', tatuadorId);
     } catch (err: any) {
-      console.warn('[Instagram] No se pudo limpiar foto de perfil al desvincular:', err?.message);
+      console.warn('[Instagram] No se pudo limpiar datos al desvincular:', err?.message);
     }
   }
 
@@ -268,11 +268,17 @@ export class InstagramService {
       const cleanToken = accessToken.replace(/\s/g, '');
       const response = await axios.get(`https://graph.instagram.com/${GRAPH_API_VERSION}/me`, {
         headers: { Authorization: `Bearer ${cleanToken}` },
-        params: { fields: 'profile_picture_url' }
+        params: { fields: 'profile_picture_url,username' }
       });
       const profilePictureUrl: string | null = response.data?.profile_picture_url ?? null;
-      await this.userRepo.update(tatuadorId, { profile_photo: profilePictureUrl });
+      const instagramHandle: string | null = response.data?.username ?? null;
+
+      const updates: Record<string, any> = { profile_photo: profilePictureUrl };
+      if (instagramHandle) updates.instagram_handle = instagramHandle;
+
+      await this.userRepo.update(tatuadorId, updates);
       console.log(`[Instagram] Foto de perfil ${profilePictureUrl ? 'actualizada' : 'eliminada'} para tatuadorId:`, tatuadorId);
+      if (instagramHandle) console.log(`[Instagram] Handle guardado: @${instagramHandle} para tatuadorId:`, tatuadorId);
     } catch (err: any) {
       console.warn('[Instagram] No se pudo obtener foto de perfil:', err?.response?.data ?? err?.message);
     }

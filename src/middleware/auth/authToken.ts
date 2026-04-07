@@ -38,10 +38,10 @@ export const authenticateToken = (
 };
 
 
-export const authorizeRol = (requiredRol: string) => {
+export const authorizeRol = (...requiredRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
       const token = req.headers.authorization?.split(' ')[1];
-      
+
       if (!token) {
           return res.status(401).json({ message: 'Token no proporcionado' });
       }
@@ -49,13 +49,13 @@ export const authorizeRol = (requiredRol: string) => {
       try {
           const decodedToken = jwt.verify(token, secretKey) as { rol: string | string[] };
 
-          // Normaliza: el rol puede ser string o array de strings
-          const rolesArray = Array.isArray(decodedToken.rol)
+          const userRoles = Array.isArray(decodedToken.rol)
             ? decodedToken.rol
             : [decodedToken.rol];
 
-          if (!rolesArray.includes(requiredRol)) {
-              return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de administrador.' });
+          const hasRole = requiredRoles.some(r => userRoles.includes(r));
+          if (!hasRole) {
+              return res.status(403).json({ message: 'Acceso denegado. Rol no autorizado.' });
           }
 
           next();

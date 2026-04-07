@@ -48,6 +48,18 @@ export class User {
   @Column({ name: 'fecha_inicio_actividad', type: 'date', nullable: true })
   public fecha_inicio_actividad: Date | null | undefined;
 
+  @Column({ name: 'localidad', type: 'varchar', length: 255, nullable: true })
+  public localidad: string | null | undefined;
+
+  @Column({ name: 'lat', type: 'double precision', nullable: true })
+  public lat: number | null | undefined;
+
+  @Column({ name: 'lng', type: 'double precision', nullable: true })
+  public lng: number | null | undefined;
+
+  @Column({ name: 'instagram_handle', type: 'varchar', length: 100, nullable: true })
+  public instagram_handle: string | null | undefined;
+
   @DeleteDateColumn({ name: 'delete_date', type: 'timestamp' })
   public delete_date: Date | null | undefined;
 

@@ -18,6 +18,21 @@ export class SupportTicket {
     @Column({ name: "description" })
     public description: string;
 
+    @Column({ name: 'category', type: 'varchar', length: 50, nullable: true })
+    public category?: string;
+
+    @Column({ name: 'priority', type: 'varchar', length: 20, nullable: true })
+    public priority?: string;
+
+    @Column({ name: 'url_pagina', type: 'varchar', length: 500, nullable: true })
+    public url_pagina?: string;
+
+    @Column({ name: 'user_agent', type: 'varchar', length: 500, nullable: true })
+    public user_agent?: string;
+
+    @Column({ name: 'screenshot', type: 'text', nullable: true })
+    public screenshot?: string;
+
     @CreateDateColumn()
     public creationtimestamp: Date;
 
