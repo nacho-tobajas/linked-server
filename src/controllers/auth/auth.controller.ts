@@ -38,6 +38,22 @@ export class AuthController {
     return res.json({ publicKey: rsaPublicKey });
   }
 
+  @httpGet('/check-availability')
+  public async checkAvailability(req: Request, res: Response, next: NextFunction) {
+    const { field, value } = req.query;
+    if (!value || (field !== 'username' && field !== 'email')) {
+      return res.status(400).json({ available: false });
+    }
+    try {
+      const user = field === 'username'
+        ? await this._userService.findByUserName(value as string)
+        : await this._userService.findByEmail(value as string);
+      return res.json({ available: !user });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   @httpPost('/login', validateInputData(loginValidationRules))
   public async login(req: Request, res: Response, next: NextFunction) {
 

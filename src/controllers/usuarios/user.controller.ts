@@ -13,6 +13,8 @@ import { ValidationError } from '../../middleware/errorHandler/validationError.j
 import { uploadUser } from '../../config/cloudinary/multer.config.js';
 import path from 'path';
 import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
+import { SolicitudTatuadorService } from '../../services/solicitud-tatuador/solicitud-tatuador.service.js';
+import { UserDto } from '../../models-dto/usuarios/user-dto.entity.js';
 
 @controller('/api/users')
 export class UserController extends BaseHttpController {
@@ -27,6 +29,7 @@ export class UserController extends BaseHttpController {
         @inject(UserService) userService: IUserService,
         @inject(UserRolAplService) userRolAplService: IUserRolAplService,
         @inject(InstagramRepository) private instagramRepo: InstagramRepository,
+        @inject(SolicitudTatuadorService) private solicitudService: SolicitudTatuadorService,
     ) {
         super();
         this._userService = userService;
@@ -121,6 +124,42 @@ export class UserController extends BaseHttpController {
 
         try {
             const createdUser = await this._userService.create(newUser);
+            res.status(201).json(createdUser);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    @httpPost('/register-tatuador', validateInputData(createUserValidationRules))
+    public async createTatuador(req: Request, res: Response, next: NextFunction) {
+        const newUser = {
+            idUser: undefined,
+            idRolApl: req.body.idRolApl,
+            rolDesc: undefined,
+            email: req.body.email,
+            realname: req.body.realname,
+            surname: req.body.surname,
+            username: req.body.username,
+            birth_date: req.body.birth_date,
+            profile_photo: req.body.profile_photo,
+            creationuser: req.body.creationuser,
+            creationtimestamp: undefined,
+            password: this.authCryptography.decrypt(req.body.password),
+            status: req.body.status,
+            delete_date: req.body.delete_date,
+            modificationuser: undefined,
+            modificationtimestamp: undefined,
+            localidad: req.body.localidad ?? null,
+            lat: req.body.lat ?? null,
+            lng: req.body.lng ?? null,
+        };
+
+        const estudio: string | null = req.body.estudio ?? null;
+        const especialidadIds: number[] = req.body.especialidadIds ?? [];
+
+        try {
+            const createdUser = await this._userService.create(newUser) as UserDto;
+            await this.solicitudService.create(createdUser.idUser!, estudio, especialidadIds);
             res.status(201).json(createdUser);
         } catch (error) {
             next(error);

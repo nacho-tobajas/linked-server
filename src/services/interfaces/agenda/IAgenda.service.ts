@@ -11,6 +11,7 @@ export interface HorarioHabitualInput {
 
 export interface IAgendaService {
     getSlotsDisponiblesParaDia(tatuadorId: number, fecha: Date): Promise<string[]>;
+    getFechasBloqueadasEnRango(tatuadorId: number, fechaInicio: Date, fechaFin: Date): Promise<string[]>;
     getHorarioHabitual(tatuadorId: number): Promise<HorarioHabitual[]>;
     updateHorarioHabitual(tatuadorId: number, horariosInput: HorarioHabitualInput[], currentUser?: string): Promise<HorarioHabitual[]>;
 }

@@ -18,6 +18,32 @@ export class AgendaController {
         this._agendaService = agendaService;
     }
 
+    // Endpoint para cliente: fechas sin disponibilidad en un rango
+    @httpGet('/:tatuadorId/fechas-bloqueadas', authenticateToken)
+    public async getFechasBloqueadas(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { tatuadorId } = req.params;
+            const { inicio, fin } = req.query;
+
+            if (!inicio || !fin || typeof inicio !== 'string' || typeof fin !== 'string') {
+                throw new ValidationError('Se requieren los parámetros inicio y fin en formato YYYY-MM-DD.', 400);
+            }
+
+            const fechaInicio = new Date(inicio + 'T00:00:00');
+            const fechaFin    = new Date(fin    + 'T00:00:00');
+
+            const fechas = await this._agendaService.getFechasBloqueadasEnRango(
+                Number(tatuadorId),
+                fechaInicio,
+                fechaFin,
+            );
+
+            res.status(200).json(fechas);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     //Endpoint para cliente
     @httpGet('/:tatuadorId/slots-dia', authenticateToken)
     public async getSlotsParaDia(req: Request, res: Response, next: NextFunction) {

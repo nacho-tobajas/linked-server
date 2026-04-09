@@ -81,6 +81,65 @@ export class AgendaService implements IAgendaService {
 
 
 
+    /**
+     * Devuelve las fechas (YYYY-MM-DD) del rango donde no hay slots disponibles.
+     * Realiza solo 2 consultas DB sin importar el tamaño del rango.
+     */
+    public async getFechasBloqueadasEnRango(tatuadorId: number, fechaInicio: Date, fechaFin: Date): Promise<string[]> {
+
+        // 1 sola query: todos los turnos del rango
+        const inicioUTC = new Date(fechaInicio.toISOString().split('T')[0] + 'T00:00:00.000Z');
+        const finUTC    = new Date(fechaFin.toISOString().split('T')[0]    + 'T23:59:59.999Z');
+        const [horariosHabituales, todosReservados] = await Promise.all([
+            this._horarioRepo.findByTatuadorId(tatuadorId),
+            this._turnoTatuadorRepo.findReservadosEnRango(tatuadorId, inicioUTC, finUTC),
+        ]);
+
+        const fechasBloqueadas: string[] = [];
+        const current = new Date(fechaInicio);
+
+        while (current <= fechaFin) {
+            const diaSemana = current.getDay();
+            const fechaISO  = current.toISOString().split('T')[0];
+            const horarioDelDia = horariosHabituales.find(h => h.dia_semana === diaSemana);
+
+            if (!horarioDelDia) {
+                // Sin horario configurado para este día de la semana
+                fechasBloqueadas.push(fechaISO);
+                current.setDate(current.getDate() + 1);
+                continue;
+            }
+
+            // Horarios ya ocupados ese día
+            const ocupados = new Set(
+                todosReservados
+                    .filter(a => a.turnoSesion?.fecha_hora_inicio &&
+                        new Date(a.turnoSesion.fecha_hora_inicio).toISOString().split('T')[0] === fechaISO)
+                    .map(a => {
+                        const d = new Date(a.turnoSesion!.fecha_hora_inicio!);
+                        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    })
+            );
+
+            // Total de slots posibles ese día
+            let totalSlots = 0;
+            const horaActual = new Date(fechaISO + 'T' + horarioDelDia.hora_inicio + 'Z');
+            const horaFin    = new Date(fechaISO + 'T' + horarioDelDia.hora_fin    + 'Z');
+            while (horaActual < horaFin) {
+                totalSlots++;
+                horaActual.setMinutes(horaActual.getMinutes() + horarioDelDia.duracion_turno_min);
+            }
+
+            if (totalSlots > 0 && ocupados.size >= totalSlots) {
+                fechasBloqueadas.push(fechaISO);
+            }
+
+            current.setDate(current.getDate() + 1);
+        }
+
+        return fechasBloqueadas;
+    }
+
     async getHorarioHabitual(tatuadorId: number): Promise<HorarioHabitual[]> {
         const horarios = await this._horarioRepo.findByTatuadorId(tatuadorId);
         return horarios;

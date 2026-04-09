@@ -48,6 +48,9 @@ import { NewsController } from '../../controllers/news/news.controller.js';
 import { SupportTicketController } from '../../controllers/support-ticket/support-ticket.controller.js';
 import { SupportTicketService } from '../../services/support-ticket/support-ticket.service.js';
 import { SupportTicketRepository } from '../../repositories/support-ticket/support-ticket.dao.js';
+import { SolicitudTatuadorController } from '../../controllers/solicitud-tatuador/solicitud-tatuador.controller.js';
+import { SolicitudTatuadorService } from '../../services/solicitud-tatuador/solicitud-tatuador.service.js';
+import { SolicitudTatuadorRepository } from '../../repositories/solicitud-tatuador/solicitud-tatuador.dao.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -66,6 +69,9 @@ container.bind<NewsController>(NewsController).toSelf();
 container.bind<SupportTicketController>(SupportTicketController).toSelf();
 container.bind<SupportTicketService>(SupportTicketService).toSelf();
 container.bind<SupportTicketRepository>(SupportTicketRepository).toSelf();
+container.bind<SolicitudTatuadorController>(SolicitudTatuadorController).toSelf();
+container.bind<SolicitudTatuadorService>(SolicitudTatuadorService).toSelf();
+container.bind<SolicitudTatuadorRepository>(SolicitudTatuadorRepository).toSelf();
 
 // Repositorios
 container.bind<UserRolRepository>(UserRolRepository).toSelf();
