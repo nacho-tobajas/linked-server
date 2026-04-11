@@ -1,37 +1,88 @@
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
-import cloudinary from "./cloudinary.config.js";
+import path from "path";
+import fs from 'fs';
 
-interface CustomParams {
-  folder: string;
-  allowed_formats: string[];
-  public_id: (req: Express.Request, file: Express.Multer.File) => string;
+// Variable para alternar entre Cloudinary o local
+const USE_CLOUDINARY = false; // cambia a true si querés Cloudinary
+
+let storage;
+
+if (USE_CLOUDINARY) {
+  // --- Configuración para Cloudinary ---
+  /*storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "users", // carpeta en Cloudinary
+      allowed_formats: ["jpg", "png", "jpeg"],
+      public_id: (_req, file) => Date.now() + "-" + file.originalname,
+    },
+  });*/
+} else {
+  // --- Configuración para almacenamiento local ---
+  /*storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Usa process.cwd() para que siempre guarde en la raíz del proyecto
+      const uploadPath = path.join(process.cwd(), "uploads/users");
+
+      // Crea el directorio si no existe
+      fs.mkdirSync(uploadPath, { recursive: true });
+
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const ext = path.extname(file.originalname);
+      cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+    },
+  });*/
 }
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "games",
-    allowed_formats: ["jpg", "png", "jpeg"],
-    public_id: (_req: Request, file: Express.Multer.File) => Date.now() + "-" + file.originalname,
-  } as unknown as CustomParams, // 👈 extendemos a mano
-});
-
-export const upload = multer({ storage });
-
-
-//si quiere usar el disco duro local para subir imagenes utilice este metodo y configure todo como estaba antes de cloudinary.
-
-/*const storage = multer.diskStorage({
+// CONFIGURACIÓN DE STORAGE PARA USUARIOS
+const userStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/games'); // Carpeta donde se guardan las imagenes de los juegos
+    const uploadPath = path.join(process.cwd(), "uploads/users");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
-    const baseName = path.basename(file.originalname, ext).replace(/\s+/g, '_');
-    const uniqueSuffix = Date.now();
-    cb(null, `${baseName}-${uniqueSuffix}${ext}`);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   },
 });
 
-const upload = multer({ storage });*/
+// CONFIGURACIÓN DE STORAGE PARA TURNOS 
+const turnoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), "uploads/turnos");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  },
+});
+
+// CONFIGURACIÓN DE STORAGE PARA TRABAJOS 
+const trabajoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(process.cwd(), "uploads/trabajos");
+    fs.mkdirSync(uploadPath, { recursive: true });
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  },
+});
+
+
+
+export const uploadUser = multer({ storage: userStorage });
+export const uploadTurno = multer({ storage: turnoStorage });
+export const uploadTrabajo = multer({ storage: trabajoStorage });
+
+//export const upload = multer({ storage });

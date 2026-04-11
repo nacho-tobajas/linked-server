@@ -25,7 +25,7 @@ export async function CreateEmailBody(email: string, token: string) {
   });
 
   const info = await trasporter.sendMail({
-    from: `"DMCOFFERS" <${process.env.EMAIL_USER}>`,
+    from: `"Linked-Support" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Recuperar contraseña',
     html: `<h3>Recupera tu contraseña</h3><br><p>Su token es: ${token}</p><p>Haz click en el siguient enlace:</p> <a href="${resetLink}">${resetLink}</a><p>Este enlace expirará en una hora</p>`,

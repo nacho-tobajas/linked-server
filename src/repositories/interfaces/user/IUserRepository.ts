@@ -16,5 +16,8 @@ export interface IUserRepository extends IBaseRepository<User> {
     sendResetPassword(email: string, token: string): Promise<void>; //Nuevo
 
     updatePass(userid: number, newPassword: string): Promise<void>; //Nuevo
+  
+    //Busca todos los usuarios que tengan el rol de Tatuador y trae precargadas sus especialidades.
+    findAllTatuadoresConEspecialidades(): Promise<User[]>;
   }
   

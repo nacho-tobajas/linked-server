@@ -1,0 +1,122 @@
+import { Request, Response, NextFunction } from 'express';
+import { inject } from 'inversify';
+import { controller, httpGet, httpPut } from 'inversify-express-utils';
+import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js'; // Tu middleware de auth
+import { IAgendaService } from '../../services/interfaces/agenda/IAgenda.service.js';
+import { AgendaService } from '../../services/agenda/agenda.service.js';
+import { ValidationError } from '../../middleware/errorHandler/validationError.js';
+import { DatabaseErrorCustom } from '../../middleware/errorHandler/dataBaseError.js';
+
+@controller('/api/agenda') // Ruta base para la agenda
+export class AgendaController {
+
+    private _agendaService: IAgendaService;
+
+    constructor(
+        @inject(AgendaService) agendaService: IAgendaService // Inyecta el servicio de agenda
+    ) {
+        this._agendaService = agendaService;
+    }
+
+    // Endpoint para cliente: fechas sin disponibilidad en un rango
+    @httpGet('/:tatuadorId/fechas-bloqueadas', authenticateToken)
+    public async getFechasBloqueadas(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { tatuadorId } = req.params;
+            const { inicio, fin } = req.query;
+
+            if (!inicio || !fin || typeof inicio !== 'string' || typeof fin !== 'string') {
+                throw new ValidationError('Se requieren los parámetros inicio y fin en formato YYYY-MM-DD.', 400);
+            }
+
+            const fechaInicio = new Date(inicio + 'T00:00:00');
+            const fechaFin    = new Date(fin    + 'T00:00:00');
+
+            const fechas = await this._agendaService.getFechasBloqueadasEnRango(
+                Number(tatuadorId),
+                fechaInicio,
+                fechaFin,
+            );
+
+            res.status(200).json(fechas);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    //Endpoint para cliente
+    @httpGet('/:tatuadorId/slots-dia', authenticateToken)
+    public async getSlotsParaDia(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { tatuadorId } = req.params;
+            // El frontend envía la fecha como query parameter: ?fecha=YYYY-MM-DD
+            const { fecha } = req.query; 
+
+            if (!fecha || typeof fecha !== 'string') {
+                throw new ValidationError("Se requiere una fecha en formato YYYY-MM-DD.", 400);
+            }
+
+            const fechaLocal = new Date(fecha + 'T00:00:00');
+
+            const slots = await this._agendaService.getSlotsDisponiblesParaDia(
+                Number(tatuadorId), 
+                fechaLocal // Fecha corregida
+            );
+            
+            res.status(200).json(slots);
+
+        } catch (error) {
+            next(error); 
+        }
+    }
+
+    // Endpoint para tatuadores
+    @httpGet('/horario-habitual', authenticateToken, authorizeRol('Tatuador')) // Solo tatuadores logueados
+    public async getHorarioHabitual(req: Request, res: Response, next: NextFunction) {
+        try {
+            // Obtenemos el ID del tatuador desde el token (req.user viene de authenticateToken)
+            const tatuadorId = req.user?.id;
+    if (!tatuadorId || typeof tatuadorId !== 'number') {
+                console.error('[AgendaController] ID de tatuador inválido o no encontrado en token:', req.user);
+                return res.status(403).json({ message: 'Acceso denegado o ID de usuario inválido.' });
+            }
+
+            const horario = await this._agendaService.getHorarioHabitual(tatuadorId);
+            res.status(200).json(horario); // Devuelve el array de horarios o []
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // --- ENDPOINT PARA GUARDAR/ACTUALIZAR EL HORARIO HABITUAL ---
+    @httpPut('/horario-habitual', authenticateToken, authorizeRol('Tatuador')) // Solo tatuadores
+    public async updateHorarioHabitual(req: Request, res: Response, next: NextFunction) {
+        try {
+            const tatuadorId = req.user?.id;
+            const username = req.user?.username; 
+
+            if (!tatuadorId || typeof tatuadorId !== 'number') {
+                console.error('[AgendaController] ID de tatuador inválido o no encontrado en token:', req.user);
+               return res.status(403).json({ message: 'Acceso denegado o ID de usuario inválido.' });
+            }
+
+            const nuevoHorario = req.body;
+            console.log(`[AgendaController] PUT /horario-habitual para tatuador ID: ${tatuadorId} por ${username}. Data recibida:`, nuevoHorario);
+
+            const horarioActualizado = await this._agendaService.updateHorarioHabitual(tatuadorId, nuevoHorario, username);
+            res.status(200).json(horarioActualizado);
+
+        } catch (error) {
+             console.error('[AgendaController] Error en PUT /horario-habitual:', error);
+             if (error instanceof ValidationError || error instanceof DatabaseErrorCustom) {
+                    return res.status(error.status || 400).json({ message: error.message });
+                } else if (error instanceof Error) {
+                    return res.status(500).json({ message: error.message });
+                } else {
+                    return res.status(500).json({ message: 'An unexpected error occurred' });
+                }
+        }
+
+
+}}

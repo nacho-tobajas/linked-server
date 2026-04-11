@@ -17,6 +17,8 @@ export interface IUserService extends IBaseService<User | UserDto> {
   sendResetPass(email: string, token: string): Promise<void>; //Nuevo
 
   findByResetToken(token: string): Promise<User | null>;
+
+  findAllTatuadores(): Promise<UserDto[]>;
 }
 
 

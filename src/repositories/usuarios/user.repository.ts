@@ -1,13 +1,19 @@
 import { User } from '../../models/usuarios/user.entity.js';
-import pool from '../../config/pg-database/db.js';
+import pool, { AppDataSource } from '../../config/pg-database/db.js';
 import { DatabaseErrorCustom } from '../../middleware/errorHandler/dataBaseError.js';
 import { errorEnumUser } from '../../middleware/errorHandler/constants/errorConstants.js';
 import { IUserRepository } from '../interfaces/user/IUserRepository.js';
 import { UserAuth } from '../../models/usuarios/user-auth.entity.js';
 import nodemailer from 'nodemailer';
+import { Repository } from 'typeorm';
 
 export class UserRepository implements IUserRepository {
+  private _userRepo: Repository<User>;
 
+  constructor() {
+    this._userRepo = AppDataSource.getRepository(User);
+  }
+  
   async findByEmail(email: string): Promise<User | undefined> {
     try {
       const result = await pool.query(
@@ -329,6 +335,26 @@ export class UserRepository implements IUserRepository {
       throw new DatabaseErrorCustom(errorEnumUser.userNotUpdated, 500);
     } finally {
       client.release();
+    }
+  }
+
+  async findAllTatuadoresConEspecialidades(): Promise<User[]> {
+    const ROL_TATUADOR_ID = 4; // Asumimos que 4 es el ID de Tatuador
+
+    try {
+      return await this._userRepo.createQueryBuilder('user')
+        // Unimos con la tabla de roles de usuario
+        .innerJoin('user.userRolApl', 'userRolApl')
+        // Unimos y cargamos las especialidades
+        .leftJoinAndSelect('user.especialidades', 'especialidades')
+        // Filtramos solo por el rol de tatuador
+        .where('userRolApl.idRolapl = :rolId', { rolId: ROL_TATUADOR_ID })
+        // Opcional: Traer también la info del rol
+        .leftJoinAndSelect('userRolApl.rolApl', 'rolApl')
+        .getMany();
+    } catch (error) {
+      console.error('Error al buscar tatuadores con especialidades', error);
+      throw new DatabaseErrorCustom('Error al buscar tatuadores', 500);
     }
   }
 }

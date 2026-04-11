@@ -33,6 +33,15 @@ export class UserRolRepository {
       throw new DatabaseErrorCustom(errorEnumUser.usuerHasNoRol, 500);
     }
   }
+  async deleteByUserId(userId: number): Promise<void> {
+    try {
+      await this._userRolRepo.delete({ idUsrapl: userId });
+    } catch (error) {
+      console.error('Error eliminando roles del usuario', error);
+      throw new DatabaseErrorCustom(errorEnumUser.userNotUpdated, 500);
+    }
+  }
+
   async update(id: number, updated: Partial<UserRolApl>): Promise<UserRolApl> {
     try {
       // Excluye propiedades que no son columnas

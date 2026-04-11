@@ -14,7 +14,11 @@ import { IUserRolAplService } from '../interfaces/user/IUserRolAplService.js';
 import { IUserRepository } from '../../repositories/interfaces/user/IUserRepository.js';
 import { CreateEmailBody } from '../../middleware/email-creator/email.js';
 import { UserMapper } from '../../mappers/user/user.mapper.js';
-
+import fs from 'fs'; 
+import path from 'path'; 
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 @injectable()
 export class UserService implements IUserService {
@@ -43,16 +47,15 @@ export class UserService implements IUserService {
     return await this._userRepository.sendResetPassword(email, token);
   }
 
-  //Nuevo
   async findByResetToken(token: string): Promise<User | null> {
     return await this._userRepository.findOneby(token);
   }
-  //Nuevo
+
   async findByEmail(email: string): Promise<User | undefined> {
     const user = await this._userRepository.findByEmail(email);
     return user === null ? undefined : user;
   }
-  //Nuevo
+
   async updatePassword(userid: number, newPassword: string): Promise<void> {
 
     const user = await this._userRepository.findOne(userid);
@@ -122,26 +125,69 @@ export class UserService implements IUserService {
 
     const userCreated = await this._userRepository.registerUser(userToCreate);
 
-    const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated, newUser.idRolApl !== undefined ? String(newUser.idRolApl) : undefined);
+    const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated);
 
     const userOutput = await this._userMapper.convertToDto(userCreated, rolAsigned!);
-
-    const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated);
 
     return userOutput;
   }
 
-  async update(id: number, user: User): Promise<User> {
+  async update(id: number, userChanges: Partial<User>): Promise<User> {
     const oldUser = await this._userRepository.findOne(id);
     if (!oldUser) {
-      throw new ValidationError('Usuario no encontrado', 400);
+      throw new ValidationError('Usuario no encontrado', 404);
     }
 
-    const updatedUser = await this._userMapper.convertToEntityOnUpdate(id, user, oldUser);
+    // Prepara el payload parcial para la actualización
+    const updatePayload: Partial<User> = await this._userMapper.convertToEntityOnUpdate(id, userChanges as User, oldUser);
 
-    const userOutput = this._userRepository.update(id, updatedUser)
+    // Guarda los paths de las fotos ANTES de actualizar
+    const oldPhotoPath = oldUser.profile_photo;
+    const newPhotoPath = updatePayload.profile_photo;
 
-    return userOutput;
+    // Ejecuta la actualización en la base de datos
+    await this._userRepository.update(id, updatePayload);
+
+
+    // Lógica para borrar foto antigua 
+    if (oldPhotoPath && newPhotoPath && oldPhotoPath !== newPhotoPath && oldPhotoPath.startsWith('/uploads/users/')) {
+
+    // 1. Obtenemos la ruta raíz del proyecto subiendo 3 niveles desde __dirname
+    const projectRoot = path.join(__dirname, '../../..');
+
+    // 2. Extraemos la parte relativa de oldPhotoPath (quitamos el '/' inicial)
+    // Ejemplo: '/uploads/users/foto.png' -> 'uploads/users/foto.png'
+    const relativeImagePath = oldPhotoPath.substring(1);
+
+    // 3. Unimos la raíz con la ruta relativa de la imagen
+    const fullPath = path.join(projectRoot, relativeImagePath);
+
+    console.log(`RUTA CALCULADA para borrar: ${fullPath}`); // Verifica que esta ruta sea correcta!
+
+    // Intenta borrar el archivo
+    fs.unlink(fullPath, (err) => {
+        if (err) {
+            // Manejo de errores más detallado
+            if (err.code === 'ENOENT') {
+                console.warn('La foto de perfil antigua no se encontró para borrar:', fullPath);
+            } else {
+                console.error('Error al borrar la foto de perfil antigua:', err);
+            }
+        } else {
+            console.log('Foto de perfil antigua borrada:', oldPhotoPath);
+        }
+    });
+  }
+
+    // Vuelve a buscar el usuario actualizado para devolverlo completo
+    const userOutput = await this._userRepository.findOne(id);
+    if (!userOutput) {
+        throw new Error('No se pudo recuperar el usuario después de actualizar');
+    }
+
+    return userOutput; // Devuelve la entidad User completa y actualizada
+    // const rol = await this._userRolAplService.SearchUserCurrentRol(await userOutput.userRolApl);
+    // return this._userMapper.convertToDto(userOutput, rol!);
   }
 
   async delete(id: number): Promise<User | undefined> {
@@ -160,73 +206,89 @@ export class UserService implements IUserService {
     return isUserNameOcuped;
   }
 
-  async updateUserByAdmin(id: number, userInput: User): Promise<User | undefined> {
+  async updateUserByAdmin(id: number, userChanges: Partial<User>): Promise<User | undefined> {
 
     const oldUser = await this._userRepository.findOne(id);
     if (!oldUser) {
-      throw new ValidationError('Usuario no encontrado', 400);
+      throw new ValidationError('Usuario no encontrado', 404);
     }
 
-    const updatedUserData = await this._userMapper.convertToEntityOnUpdate(id, userInput, oldUser);
+    const updatePayload: Partial<User> = await this._userMapper.convertToEntityOnUpdate(id, userChanges as User, oldUser);
 
-    let userUpdated = await this._userRepository.update(id, updatedUserData);
-    if (!userUpdated) return;
+const oldPhotoPath = oldUser.profile_photo;
+    const newPhotoPath = updatePayload.profile_photo;
 
-    return userUpdated;
+    await this._userRepository.update(id, updatePayload);
+
+
+     if (oldPhotoPath && newPhotoPath && oldPhotoPath !== newPhotoPath && oldPhotoPath.startsWith('/uploads/users/')) {
+
+    // 1. Obtenemos la ruta raíz del proyecto subiendo 3 niveles desde __dirname
+    const projectRoot = path.join(__dirname, '../../..');
+
+    // 2. Extraemos la parte relativa de oldPhotoPath (quitamos el '/' inicial)
+    // Ejemplo: '/uploads/users/foto.png' -> 'uploads/users/foto.png'
+    const relativeImagePath = oldPhotoPath.substring(1);
+
+    // 3. Unimos la raíz con la ruta relativa de la imagen
+    const fullPath = path.join(projectRoot, relativeImagePath);
+
+    console.log(`RUTA CALCULADA para borrar: ${fullPath}`); // Verifica que esta ruta sea correcta!
+
+    // Intenta borrar el archivo
+    fs.unlink(fullPath, (err) => {
+        if (err) {
+            // Manejo de errores más detallado
+            if (err.code === 'ENOENT') {
+                console.warn('La foto de perfil antigua no se encontró para borrar:', fullPath);
+            } else {
+                console.error('Error al borrar la foto de perfil antigua:', err);
+            }
+        } else {
+            console.log('Foto de perfil antigua borrada:', oldPhotoPath);
+        }
+    });
+  }
+
+    const userUpdated = await this._userRepository.findOne(id);
+   
+
+    return userUpdated; 
+
+    // const rol = await this._userRolAplService.SearchUserCurrentRol(await userUpdated.userRolApl);
+    // return this._userMapper.convertToDto(userUpdated, rol!);
+  }
+  
+
+  async findAllTatuadores(): Promise<UserDto[]> {
+    // 1. Llama al nuevo método del repositorio
+    const usersList = await this._userRepository.findAllTatuadoresConEspecialidades();
+
+    let userOutPutList: UserDto[] = [];
+
+    if (!usersList || usersList.length === 0) return userOutPutList;
+
+    // 2. Reutilizamos la misma lógica de mapeo que ya tenías en findAll
+    userOutPutList = await Promise.all(
+      usersList.map(async (user) => {
+        // Gracias a la consulta, user.userRolApl ya viene cargado (no es N+1)
+        const userRolAplList = (await user.userRolApl)?.map((c) => c);
+        
+        const currentRol = await this._userRolAplService.SearchUserCurrentRol(
+          userRolAplList!
+        );
+
+        // El mapper debería tomar user.especialidades (que ya viene cargado)
+        // y convertirlo en parte del DTO.
+        const userOutput = await this._userMapper.convertToDto(user, currentRol!);
+        return userOutput;
+      })
+    );
+
+    return userOutPutList;
   }
 
 }
-    const userToCreate: User = new User();
-    userToCreate.id = undefined;
-    userToCreate.realname = newUser.realname;
-    userToCreate.surname = newUser.surname;
-    userToCreate.username = newUser.username;
-    userToCreate.profile_photo = newUser.profile_photo;
-    userToCreate.birth_date = newUser.birth_date;
-    userToCreate.delete_date = newUser.delete_date;
-    userToCreate.status = newUser.status;
-    userToCreate.creationuser = newUser.creationuser;
-    userToCreate.creationtimestamp = newUser.creationtimestamp;
-    userToCreate.modificationuser = newUser.modificationuser;
-    userToCreate.modificationtimestamp = newUser.modificationtimestamp;
-    userToCreate.userauth = newUserAuth;
 
-    return userToCreate;
-  }
 
-  private async initializeUserToUpdate(
-    id: number,
-    userWithChanges: User,
-    oldUser: User
-  ) {
-    const userToUpdate: User = {
-      id: oldUser.id,
-      realname:
-        userWithChanges.realname && userWithChanges.realname.trim() !== ''
-          ? userWithChanges.realname
-          : oldUser.realname,
-      surname:
-        userWithChanges.surname && userWithChanges.surname.trim() !== ''
-          ? userWithChanges.surname
-          : oldUser.surname,
-      username:
-        userWithChanges.username && userWithChanges.username.trim() !== ''
-          ? userWithChanges.username
-          : oldUser.username,
-      profile_photo:
-        userWithChanges.username && userWithChanges.username.trim() !== ''
-          ? userWithChanges.username
-          : oldUser.username,
-      birth_date: userWithChanges.birth_date ?? oldUser.birth_date,
-      delete_date: userWithChanges.delete_date ?? oldUser.delete_date,
-      status: userWithChanges.status ?? oldUser.status,
-      creationuser: oldUser.creationuser, // No debe cambiar en la actualización
-      creationtimestamp: oldUser.creationtimestamp, // No debe cambiar en la actualización
-      modificationuser:
-        userWithChanges.modificationuser ?? oldUser?.modificationuser,
-      modificationtimestamp: new Date(), // Fecha de modificación actual
-    };
-    return userToUpdate;
-  }
-}
 

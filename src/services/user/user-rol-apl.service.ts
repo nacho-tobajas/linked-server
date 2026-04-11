@@ -22,7 +22,7 @@ export class UserRolAplService implements IUserRolAplService {
     }
 
     async updateUserRoles(userId: number, roleIds: number[], updatedBy: string): Promise<RolApl[]> {
-        // Asigna nuevos roles
+        await this._userRolRepository.deleteByUserId(userId);
         const result: RolApl[] = [];
         for (const idRol of roleIds) {
             result.push(await this.createUserRolApl(userId, idRol, updatedBy));
@@ -106,4 +106,9 @@ export class UserRolAplService implements IUserRolAplService {
         return created.rolApl!;
 
     }
+
+    async getUserRolByidRole(idRole: number): Promise<RolApl | undefined> {
+        return await this._rolAplRepository.findOne(idRole);
+    }
+
 }
