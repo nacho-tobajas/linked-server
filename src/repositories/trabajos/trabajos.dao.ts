@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { Repository } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { AppDataSource } from '../../config/pg-database/db.js';
 import { Trabajo } from '../../models/trabajos/trabajo.entity.js';
 import { TrabajoFavorito } from '../../models/trabajos/trabajo-favorito.entity.js';
@@ -108,6 +108,39 @@ export class TrabajosRepository implements ITrabajosRepository {
     } catch (error) {
       console.error(`Error al buscar trabajos del tatuador ${tatuadorId}`, error);
       throw new DatabaseErrorCustom("Error al obtener el portfolio", 500);
+    }
+  }
+
+  async findByInstagramMediaId(instagramMediaId: string): Promise<Trabajo | undefined> {
+    try {
+      const trabajo = await this.repository.findOne({ where: { instagram_media_id: instagramMediaId } });
+      return trabajo ?? undefined;
+    } catch (error) {
+      throw new DatabaseErrorCustom('Error al verificar duplicado de Instagram', 500);
+    }
+  }
+
+  async findInstagramMediaIdsByTatuador(tatuadorId: number): Promise<string[]> {
+    try {
+      const trabajos = await this.repository.find({
+        where: { tatuador: { id: tatuadorId }, instagram_media_id: Not(IsNull()) },
+        select: ['instagram_media_id']
+      });
+      return trabajos.map(t => t.instagram_media_id!).filter(Boolean);
+    } catch (error) {
+      throw new DatabaseErrorCustom('Error al obtener IDs de Instagram del portfolio', 500);
+    }
+  }
+
+  async deleteByInstagramMediaId(mediaId: string): Promise<void> {
+    try {
+      const trabajo = await this.repository.findOne({
+        where: { instagram_media_id: mediaId },
+        relations: { fotos: true }
+      });
+      if (trabajo) await this.repository.remove(trabajo);
+    } catch (error) {
+      throw new DatabaseErrorCustom('Error al eliminar trabajo de Instagram', 500);
     }
   }
 

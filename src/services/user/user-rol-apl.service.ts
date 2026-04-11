@@ -22,10 +22,7 @@ export class UserRolAplService implements IUserRolAplService {
     }
 
     async updateUserRoles(userId: number, roleIds: number[], updatedBy: string): Promise<RolApl[]> {
-        // Primero elimino los roles actuales del usuario
         await this._userRolRepository.deleteByUserId(userId);
-        
-        // Asigno nuevos roles
         const result: RolApl[] = [];
         for (const idRol of roleIds) {
             result.push(await this.createUserRolApl(userId, idRol, updatedBy));
@@ -57,7 +54,7 @@ export class UserRolAplService implements IUserRolAplService {
             rolToAsign = rol?.id;
 
         } else if (!currentRol) {
-            rolToAsign = userRolIdCons.Cliente;
+            rolToAsign = userRolIdCons.Usuariotienda;
 
         } else {
             rolToAsign = currentRol.id;
@@ -109,4 +106,9 @@ export class UserRolAplService implements IUserRolAplService {
         return created.rolApl!;
 
     }
+
+    async getUserRolByidRole(idRole: number): Promise<RolApl | undefined> {
+        return await this._rolAplRepository.findOne(idRole);
+    }
+
 }

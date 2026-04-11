@@ -9,14 +9,29 @@ export class SupportTicket {
     @PrimaryGeneratedColumn()
     public id?: number;
 
-    @Column({type: "boolean"})
+    @Column({ type: "boolean" })
     public status: boolean;
 
     @Column()
     public creationuser: string;
 
     @Column({ name: "description" })
-    public description: string; 
+    public description: string;
+
+    @Column({ name: 'category', type: 'varchar', length: 50, nullable: true })
+    public category?: string;
+
+    @Column({ name: 'priority', type: 'varchar', length: 20, nullable: true })
+    public priority?: string;
+
+    @Column({ name: 'url_pagina', type: 'varchar', length: 500, nullable: true })
+    public url_pagina?: string;
+
+    @Column({ name: 'user_agent', type: 'varchar', length: 500, nullable: true })
+    public user_agent?: string;
+
+    @Column({ name: 'screenshot', type: 'text', nullable: true })
+    public screenshot?: string;
 
     @CreateDateColumn()
     public creationtimestamp: Date;
@@ -27,17 +42,17 @@ export class SupportTicket {
     @UpdateDateColumn({ nullable: true })
     public modificationtimestamp?: Date;
 
-  
 
-    @ManyToMany(() => User, (user) => user.ticketlist,{
+
+    @ManyToMany(() => User, (user) => user.ticketlist, {
         nullable: true,
         lazy: true
     })
 
     @JoinTable({
         name: 'hd_usr_st', //tabla intermedia
-        joinColumn: {name:'id_ticket' , referencedColumnName: 'id'},
-        inverseJoinColumn: {name:'id_user' , referencedColumnName: 'id' },
+        joinColumn: { name: 'id_ticket', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'id_user', referencedColumnName: 'id' },
     })
     public user?: Promise<User>
 
@@ -60,4 +75,3 @@ export class SupportTicket {
         this.id = id;
     }
 }
-

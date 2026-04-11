@@ -1,86 +1,46 @@
-// user.service.ts
 import { inject, injectable } from 'inversify';
-import { ISupportTicketService } from '../interfaces/support-ticket/ISupport-ticket.js';
-import { SupportTicket } from '../../models/support-ticket/support-ticket.entity.js';
 import { SupportTicketRepository } from '../../repositories/support-ticket/support-ticket.dao.js';
+import { SupportTicket } from '../../models/support-ticket/support-ticket.entity.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
-import { UserController } from '../../controllers/usuarios/user.controller.js';
-import { IUserService } from '../interfaces/user/IUserService.js';
-import { UserService } from '../user/user.service.js';
-import { AuthenticationError } from '../../middleware/errorHandler/authenticationError.js';
-import { ticketDto } from '../../models-dto/support-ticket/ticket-dto.js';
-
 
 @injectable()
-export class SupportTicketService implements ISupportTicketService {
-  private _supportTicketRepository: SupportTicketRepository;
-  private _userService: IUserService ;
-
+export class SupportTicketService {
   constructor(
-    @inject(SupportTicketRepository) supportTicketRepository: SupportTicketRepository,
-    @inject(UserService) userservice: IUserService,
-
-
-  ) {
-    this._supportTicketRepository = supportTicketRepository;
-    this._userService = userservice;
-  }
-
+    @inject(SupportTicketRepository) private repo: SupportTicketRepository
+  ) {}
 
   async findAll(): Promise<SupportTicket[]> {
-    return this._supportTicketRepository.findAll();
+    return this.repo.findAll();
   }
 
-  async findOne(id: number): Promise<SupportTicket | undefined> {
-    return this._supportTicketRepository.findOne(id);
+  async findOne(id: number): Promise<SupportTicket> {
+    const ticket = await this.repo.findOne(id);
+    if (!ticket) throw new ValidationError('Ticket no encontrado', 404);
+    return ticket;
   }
 
-  async create(newSupportTicket: SupportTicket): Promise<SupportTicket> {
-
-   return this._supportTicketRepository.create(newSupportTicket);
-  }
-
-  //crear ticket tabla intermedia
-  async createTicket(supportTicketInput: SupportTicket, userName: string): Promise<ticketDto> {
-    const userLog = await this._userService.findByUserName(userName);
-
-    if (!userLog) {
-      throw new AuthenticationError('El Usuario no fue encontrado', 404);
+  async create(data: Partial<SupportTicket>): Promise<SupportTicket> {
+    if (!data.description?.trim()) {
+      throw new ValidationError('La descripción es obligatoria', 400);
     }
-
-    supportTicketInput.status = true;
-    supportTicketInput.creationtimestamp = new Date();
-
-    let newSupportTicket:  SupportTicket = new SupportTicket(
-        supportTicketInput.status,
-        userName,
-        supportTicketInput.creationtimestamp,
-        supportTicketInput.description
-      );
-
-    newSupportTicket.user = Promise.resolve(userLog);
-    
-    const ticketCreated = await this._supportTicketRepository.create(newSupportTicket);
-
-    let ticketOutput: ticketDto = new ticketDto( 
-      ticketCreated.id,
-      ticketCreated.status,
-      ticketCreated.creationuser,
-      ticketCreated.creationtimestamp,
-      ticketCreated.description);
-
-    return ticketOutput;
+    return this.repo.create({
+      ...data,
+      status: false,
+      creationtimestamp: new Date(),
+    });
   }
 
-  async update(id: number, supportTicket: SupportTicket): Promise<SupportTicket> {
-
-    return this._supportTicketRepository.update(id, supportTicket);
+  async update(id: number, changes: Partial<SupportTicket>): Promise<SupportTicket> {
+    const updated = await this.repo.update(id, {
+      ...changes,
+      modificationtimestamp: new Date(),
+    });
+    if (!updated) throw new ValidationError('Ticket no encontrado', 404);
+    return updated;
   }
 
-  async delete(id: number): Promise<SupportTicket | undefined> {
-    return this._supportTicketRepository.delete(id);
+  async delete(id: number): Promise<void> {
+    await this.findOne(id);
+    await this.repo.delete(id);
   }
-
 }
-
-

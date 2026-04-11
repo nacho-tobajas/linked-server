@@ -8,17 +8,17 @@ import { uploadTrabajo } from '../../config/cloudinary/multer.config.js';
 
 @controller('/api/trabajos')
 export class TrabajosController {
-  
-  constructor(@inject(TrabajosService) private trabajosService: TrabajosService) {}
+
+  constructor(@inject(TrabajosService) private trabajosService: TrabajosService) { }
 
   //Feed global (publico)
-  @httpGet('/feed') 
+  @httpGet('/feed')
   public async getFeed(req: Request, res: Response, next: NextFunction) {
     try {
-      const trabajos = await this.trabajosService.getAllTrabajosRecientes(); 
+      const trabajos = await this.trabajosService.getAllTrabajosRecientes();
       res.json(trabajos);
-    } catch (e) { 
-      next(e); 
+    } catch (e) {
+      next(e);
     }
   }
 
@@ -29,17 +29,17 @@ export class TrabajosController {
       const username = req.user?.username || 'system';
       const tatuadorId = req.user?.id;
       const { descripcion } = req.body;
-      
+
       const files = req.files as Express.Multer.File[];
 
       if (!files || files.length === 0) {
         throw new ValidationError("Se requiere al menos una imagen", 400);
       }
-      
+
       const paths = files.map(file => `/uploads/trabajos/${file.filename}`);
-      
+
       const trabajo = await this.trabajosService.subirTrabajo(tatuadorId!, paths, descripcion, username);
-      
+
       res.status(201).json(trabajo);
     } catch (e) { next(e); }
   }
@@ -75,14 +75,23 @@ export class TrabajosController {
       res.status(200).json({ message: 'Like removido' });
     } catch (e) { next(e); }
   }
-  
+
   // Obtener IDs de likes
   @httpGet('/mis-favoritos/ids', authenticateToken,)//  authorizeRol('Cliente')
   public async getMisLikes(req: Request, res: Response, next: NextFunction) {
-      try {
-          const clienteId = req.user?.id;
-          const ids = await this.trabajosService.getMisLikesIds(clienteId!);
-          res.json(ids);
-      } catch (e) { next(e); }
+    try {
+      const clienteId = req.user?.id;
+      const ids = await this.trabajosService.getMisLikesIds(clienteId!);
+      res.json(ids);
+    } catch (e) { next(e); }
+  }
+
+  @httpGet('/:id', authenticateToken)
+  public async getTrabajoById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const trabajoId = parseInt(req.params.id, 10);
+      const trabajo = await this.trabajosService.getTrabajoById(trabajoId);
+      res.json(trabajo);
+    } catch (e) { next(e); }
   }
 }

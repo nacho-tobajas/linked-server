@@ -8,13 +8,9 @@ import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { IAuthService } from '../../services/interfaces/auth/IAuthService.js';
 import { IPasswordService } from '../../services/interfaces/auth/IPasswordService.js';
 import { PasswordService } from '../../services/auth/password.service.js';
-import { SupportTicketController } from '../../controllers/support-ticket/support-ticket.controller.js';
-import { SupportTicketService } from '../../services/support-ticket/support-ticket.service.js';
-import { ISupportTicketService } from '../../services/interfaces/support-ticket/ISupport-ticket.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { UserRepository } from '../../repositories/usuarios/user.dao.js';
-import { SupportTicketRepository } from '../../repositories/support-ticket/support-ticket.dao.js';
 import { UserRolRepository } from '../../repositories/usuarios/user-rol-apl.dao.js';
 import { TrabajosRepository } from '../../repositories/trabajos/trabajos.dao.js';
 import { TrabajosService } from '../../services/trabajos/trabajos.service.js';
@@ -26,6 +22,7 @@ import { ISweItemMenuService } from '../../services/interfaces/sweitemmenu/ISweI
 import { SweItemMenuService } from '../../services/sweitemmenu/sweitemmenu.service.js';
 import { IUserRepository } from '../../repositories/interfaces/user/IUserRepository.js';
 import { IUserAuthRepository } from '../../repositories/interfaces/user/IUserAuthRepository.js';
+
 import { UserMapper } from '../../mappers/user/user.mapper.js';
 import { EspecialidadesController } from '../../controllers/especialidades/especialidades.controller.js';
 import { EspecialidadesRepository } from '../../repositories/especialidades/especialidades.dao.js';
@@ -43,6 +40,17 @@ import { TurnosController } from '../../controllers/agenda/turnos.controller.js'
 import { TurnosService } from '../../services/agenda/turno.service.js';
 import { ITurnosService } from '../../services/interfaces/agenda/ITurno.service.js';
 import { TrabajosController } from '../../controllers/trabajos/trabajos.controller.js';
+import { InstagramController } from '../../controllers/instagram/instagram.controller.js';
+import { InstagramService } from '../../services/instagram/instagram.service.js';
+import { InstagramSchedulerService } from '../../services/instagram/instagram-scheduler.service.js';
+import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
+import { NewsController } from '../../controllers/news/news.controller.js';
+import { SupportTicketController } from '../../controllers/support-ticket/support-ticket.controller.js';
+import { SupportTicketService } from '../../services/support-ticket/support-ticket.service.js';
+import { SupportTicketRepository } from '../../repositories/support-ticket/support-ticket.dao.js';
+import { SolicitudTatuadorController } from '../../controllers/solicitud-tatuador/solicitud-tatuador.controller.js';
+import { SolicitudTatuadorService } from '../../services/solicitud-tatuador/solicitud-tatuador.service.js';
+import { SolicitudTatuadorRepository } from '../../repositories/solicitud-tatuador/solicitud-tatuador.dao.js';
 
 // Crear un nuevo contenedor de Inversify
 const container = new Container({ defaultScope: 'Singleton' });
@@ -50,18 +58,22 @@ const container = new Container({ defaultScope: 'Singleton' });
 // Controladores
 container.bind<AuthController>(AuthController).toSelf();
 container.bind<UserController>(UserController).toSelf();
-container.bind<SupportTicketController>(SupportTicketController).toSelf();
 container.bind<SweItemMenuController>(SweItemMenuController).toSelf();
 container.bind<EspecialidadesController>(EspecialidadesController).toSelf();
 container.bind<UserEspecialidadController>(UserEspecialidadController).toSelf();
 container.bind<AgendaController>(AgendaController).toSelf();
 container.bind<TurnosController>(TurnosController).toSelf();
 container.bind<TrabajosController>(TrabajosController).toSelf();
+container.bind<InstagramController>(InstagramController).toSelf();
+container.bind<NewsController>(NewsController).toSelf();
+container.bind<SupportTicketController>(SupportTicketController).toSelf();
+container.bind<SupportTicketService>(SupportTicketService).toSelf();
+container.bind<SupportTicketRepository>(SupportTicketRepository).toSelf();
+container.bind<SolicitudTatuadorController>(SolicitudTatuadorController).toSelf();
+container.bind<SolicitudTatuadorService>(SolicitudTatuadorService).toSelf();
+container.bind<SolicitudTatuadorRepository>(SolicitudTatuadorRepository).toSelf();
 
 // Repositorios
-//container.bind<UserAuthRepository>(UserAuthRepository).toSelf();
-//container.bind<UserRepository>(UserRepository).toSelf();
-container.bind<SupportTicketRepository>(SupportTicketRepository).toSelf();
 container.bind<UserRolRepository>(UserRolRepository).toSelf();
 container.bind<RolAplRepository>(RolAplRepository).toSelf();
 container.bind<SideMenuRepository>(SideMenuRepository).toSelf();
@@ -69,22 +81,23 @@ container.bind<EspecialidadesRepository>(EspecialidadesRepository).toSelf();
 container.bind<HorarioHabitualRepository>(HorarioHabitualRepository).toSelf();
 container.bind<ITurnoTatuadorRepository>(TurnoTatuadorRepository).toSelf();
 container.bind<TrabajosRepository>(TrabajosRepository).toSelf();
+container.bind<InstagramRepository>(InstagramRepository).toSelf();
 
 // Interfaces
 container.bind<IAuthService>(AuthService).to(AuthService);
 container.bind<IUserService>(UserService).to(UserService);
 container.bind<IPasswordService>(PasswordService).to(PasswordService);
-container.bind<ISupportTicketService>(SupportTicketService).to(SupportTicketService);
 container.bind<IUserRolAplService>(UserRolAplService).to(UserRolAplService);
 container.bind<ISweItemMenuService>(SweItemMenuService).to(SweItemMenuService);
 container.bind<IUserRepository>(UserRepository).to(UserRepository);
-container.bind<IUserAuthRepository>(UserAuthRepository).toSelf();
-container.bind<IEspecialidadesService>(EspecialidadesService).toSelf();
-container.bind<UserEspecialidadService>(UserEspecialidadService).toSelf();
-//container.bind<IAgendaService>(AgendaService).toSelf();
-container.bind<AgendaService>(AgendaService).toSelf();
-container.bind<ITurnosService>(TurnosService).toSelf();
-container.bind<TrabajosService>(TrabajosService).toSelf();
+container.bind<IUserAuthRepository>(UserAuthRepository).to(UserAuthRepository);
+container.bind<IEspecialidadesService>(EspecialidadesService).to(EspecialidadesService);
+container.bind<UserEspecialidadService>(UserEspecialidadService).to(UserEspecialidadService);
+container.bind<IAgendaService>(AgendaService).to(AgendaService);
+container.bind<ITurnosService>(TurnosService).to(TurnosService);
+container.bind<TrabajosService>(TrabajosService).to(TrabajosService);
+container.bind<InstagramService>(InstagramService).to(InstagramService);
+container.bind<InstagramSchedulerService>(InstagramSchedulerService).to(InstagramSchedulerService);
 
 //mappers
 container.bind<UserMapper>(UserMapper).toSelf();

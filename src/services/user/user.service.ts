@@ -88,6 +88,7 @@ export class UserService implements IUserService {
         );
 
         const userOutput = await this._userMapper.convertToDto(user, currentRol!);
+
         return userOutput;
       })
     );
@@ -124,7 +125,7 @@ export class UserService implements IUserService {
 
     const userCreated = await this._userRepository.registerUser(userToCreate);
 
-    const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated, newUser.idRolApl !== undefined ? String(newUser.idRolApl) : undefined);
+    const rolAsigned = await this._userRolAplService.AsignRolUser(userCreated);
 
     const userOutput = await this._userMapper.convertToDto(userCreated, rolAsigned!);
 
@@ -288,5 +289,6 @@ const oldPhotoPath = oldUser.profile_photo;
   }
 
 }
+
 
 

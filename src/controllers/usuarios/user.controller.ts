@@ -2,21 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../../services/user/user.service.js';
 import { IUserService } from '../../services/interfaces/user/IUserService.js';
 import { inject } from 'inversify';
-import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut } from 'inversify-express-utils';
+import { controller, httpDelete, httpGet, httpPatch, httpPost, httpPut, BaseHttpController } from 'inversify-express-utils';
 import { validateInputData } from '../../middleware/validation/validation-middleware.js';
-import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
+import { createUserValidationRules, deleteUserValidationRules, forgotPasswordValidationRules, getAllUserRolsValidationRules, getUserRolByidRoleValidationRules, getUserValidationRules, resetPasswordValidationRules, updateUserByAdminValidationRules, updateUserValidationRules } from '../../middleware/validation/validations-rules/user-validations.js';
 import { authenticateToken, authorizeRol } from '../../middleware/auth/authToken.js';
-import { OkNegotiatedContentResult } from 'inversify-express-utils/lib/results/OkNegotiatedContentResult.js';
-import { JsonResult } from 'inversify-express-utils/lib/results/JsonResult.js';
 import { AuthCryptography } from '../../middleware/auth/authCryptography.js';
 import { IUserRolAplService } from '../../services/interfaces/user/IUserRolAplService.js';
 import { UserRolAplService } from '../../services/user/user-rol-apl.service.js';
 import { ValidationError } from '../../middleware/errorHandler/validationError.js';
 import { uploadUser } from '../../config/cloudinary/multer.config.js';
 import path from 'path';
+import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
+import { SolicitudTatuadorService } from '../../services/solicitud-tatuador/solicitud-tatuador.service.js';
+import { UserDto } from '../../models-dto/usuarios/user-dto.entity.js';
 
 @controller('/api/users')
-export class UserController {
+export class UserController extends BaseHttpController {
     private _userService: IUserService;
     private _userRolAplService: IUserRolAplService;
 
@@ -27,7 +28,10 @@ export class UserController {
     constructor(
         @inject(UserService) userService: IUserService,
         @inject(UserRolAplService) userRolAplService: IUserRolAplService,
+        @inject(InstagramRepository) private instagramRepo: InstagramRepository,
+        @inject(SolicitudTatuadorService) private solicitudService: SolicitudTatuadorService,
     ) {
+        super();
         this._userService = userService;
         this._userRolAplService = userRolAplService;
     }
@@ -40,7 +44,7 @@ export class UserController {
                 res.status(200).json(users);
                 //new OkNegotiatedContentResult(users);
             } else {
-                return new JsonResult({ message: 'No se han encontrado usuarios' }, 404);
+                return this.json({ message: 'No se han encontrado usuarios' }, 404);
             }
         } catch (error) {
             next(error);
@@ -64,17 +68,17 @@ export class UserController {
 
     @httpGet('/tatuadores')
     public async findAllTatuadores(req: Request, res: Response, next: NextFunction) {
-    try {
-      const tatuadores = await this._userService.findAllTatuadores();
-      
-      if (tatuadores.length > 0) {
-        res.status(200).json(tatuadores);
-      } else {
-        res.status(404).json({ message: 'No se han encontrado tatuadores' });
-      }
-    } catch (error) {
-      next(error);
-    }
+        try {
+            const tatuadores = await this._userService.findAllTatuadores();
+
+            if (tatuadores.length > 0) {
+                res.status(200).json(tatuadores);
+            } else {
+                res.status(404).json({ message: 'No se han encontrado tatuadores' });
+            }
+        } catch (error) {
+            next(error);
+        }
     }
 
     @httpGet('/:id', validateInputData(getUserValidationRules))
@@ -104,8 +108,8 @@ export class UserController {
             realname: req.body.realname,
             surname: req.body.surname,
             username: req.body.username,
-                profile_photo: undefined,
             birth_date: req.body.birth_date,
+            profile_photo: req.body.profile_photo,
             creationuser: req.body.creationuser,
             creationtimestamp: undefined,
             password: this.authCryptography.decrypt(req.body.password),
@@ -113,10 +117,49 @@ export class UserController {
             delete_date: req.body.delete_date,
             modificationuser: undefined,
             modificationtimestamp: undefined,
+            localidad: req.body.localidad ?? null,
+            lat: req.body.lat ?? null,
+            lng: req.body.lng ?? null,
         };
 
         try {
             const createdUser = await this._userService.create(newUser);
+            res.status(201).json(createdUser);
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    @httpPost('/register-tatuador', validateInputData(createUserValidationRules))
+    public async createTatuador(req: Request, res: Response, next: NextFunction) {
+        const newUser = {
+            idUser: undefined,
+            idRolApl: req.body.idRolApl,
+            rolDesc: undefined,
+            email: req.body.email,
+            realname: req.body.realname,
+            surname: req.body.surname,
+            username: req.body.username,
+            birth_date: req.body.birth_date,
+            profile_photo: req.body.profile_photo,
+            creationuser: req.body.creationuser,
+            creationtimestamp: undefined,
+            password: this.authCryptography.decrypt(req.body.password),
+            status: req.body.status,
+            delete_date: req.body.delete_date,
+            modificationuser: undefined,
+            modificationtimestamp: undefined,
+            localidad: req.body.localidad ?? null,
+            lat: req.body.lat ?? null,
+            lng: req.body.lng ?? null,
+        };
+
+        const estudio: string | null = req.body.estudio ?? null;
+        const especialidadIds: number[] = req.body.especialidadIds ?? [];
+
+        try {
+            const createdUser = await this._userService.create(newUser) as UserDto;
+            await this.solicitudService.create(createdUser.idUser!, estudio, especialidadIds);
             res.status(201).json(createdUser);
         } catch (error) {
             next(error);
@@ -129,26 +172,26 @@ export class UserController {
         const userUpdates = req.body;
 
         try {
-           // Si Angular envía el usuario dentro de FormData
-    let userUpdates = req.body;
-    if (req.body.user) {
-      userUpdates = JSON.parse(req.body.user);
-    }
+            // Si Angular envía el usuario dentro de FormData
+            let userUpdates = req.body;
+            if (req.body.user) {
+                userUpdates = JSON.parse(req.body.user);
+            }
 
-    if (req.file) {
-      // Si usás Cloudinary: req.file.path será la URL pública
-      // Si usás local: construimos la ruta relativa accesible
-      userUpdates.profile_photo = req.file.path.includes("uploads")
-        ? `/uploads/users/${path.basename(req.file.path)}`
-        : req.file.path;
-    }
+            if (req.file) {
+                // Si usás Cloudinary: req.file.path será la URL pública
+                // Si usás local: construimos la ruta relativa accesible
+                userUpdates.profile_photo = req.file.path.includes("uploads")
+                    ? `/uploads/users/${path.basename(req.file.path)}`
+                    : req.file.path;
+            }
 
-    const updatedUser = await this._userService.update(id, userUpdates);
+            const updatedUser = await this._userService.update(id, userUpdates);
             if (updatedUser) {
                 res.status(200).json(updatedUser);
             } else {
                 res.status(404).json({ message: 'Usuario no encontrado' });
-                }
+            }
         } catch (error) {
             next(error);
         }
@@ -158,33 +201,41 @@ export class UserController {
 
     @httpPatch('/:id/profile-photo', authenticateToken, uploadUser.single('image'))
     public async updateProfilePhoto(req: Request, res: Response, next: NextFunction) {
-  const id = parseInt(req.params.id, 10);
+        const id = parseInt(req.params.id, 10);
 
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No se proporcionó ninguna imagen' });
+        try {
+            // Bloquear edición manual si tiene Instagram vinculado
+            const igToken = await this.instagramRepo.findByTatuadorId(id);
+            if (igToken?.access_token) {
+                return res.status(403).json({
+                    message: 'Tu foto de perfil está sincronizada con Instagram y no puede editarse manualmente.'
+                });
+            }
+
+            if (!req.file) {
+                return res.status(400).json({ message: 'No se proporcionó ninguna imagen' });
+            }
+
+            const imageUrl = `/uploads/users/${req.file.filename}`;
+
+            // Actualizar el usuario en la base de datos con esa ruta
+            const updatedUser = await this._userService.update(id, {
+                profile_photo: imageUrl,
+            });
+
+            if (!updatedUser) {
+                return res.status(404).json({ message: "Usuario no encontrado" });
+            }
+
+            // Devolver también la URL completa solo en la respuesta (no en la BD)
+            return res.status(200).json({
+                message: "Foto de perfil actualizada correctamente",
+                profile_photo: `${process.env.BASE_URL || "http://localhost:3000"}${imageUrl}`,
+            });
+        } catch (error) {
+            next(error);
+        }
     }
-
-    const imageUrl = `/uploads/users/${req.file.filename}`;
-
-    // Actualizar el usuario en la base de datos con esa ruta
-    const updatedUser = await this._userService.update(id, {
-      profile_photo: imageUrl,
-    });
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    // Devolver también la URL completa solo en la respuesta (no en la BD)
-    return res.status(200).json({
-      message: "Foto de perfil actualizada correctamente",
-      profile_photo: `${process.env.BASE_URL || "http://localhost:3000"}${imageUrl}`,
-    });
-    } catch (error) {
-      next(error);
-    }
-}
 
     //Nuevo método para restablecer la contraseña
     @httpPost('/forgot-password', validateInputData(forgotPasswordValidationRules))
@@ -195,11 +246,7 @@ export class UserController {
             //Busca el usuario por el email
             const user = await this._userService.findByEmail(email);
 
-            if (user === undefined) {
-                return res.status(404).json({ message: "El correo ingresado no está registrado" });
-            }
-
-            else {
+            if (user) {
                 //Genero un token aleatorio
                 const crypto = await import('crypto');
                 const token = crypto.randomBytes(32).toString('hex');
@@ -220,8 +267,8 @@ export class UserController {
                 }
 
                 await this._userService.sendResetPass(user.email, token);
-                return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
             }
+            return res.json({ message: "Si existe, se envio un correo electrónico de recuperación" });
         } catch (error) {
             next(error);
         }
@@ -268,7 +315,7 @@ export class UserController {
         }
     };
 
-    @httpPut('/updateUser/:id', uploadUser.single('image'),authenticateToken, validateInputData(updateUserByAdminValidationRules))
+    @httpPut('/updateUser/:id', uploadUser.single('image'), authenticateToken, validateInputData(updateUserByAdminValidationRules))
     public async updateUserByAdmin(req: Request, res: Response, next: NextFunction) {
 
         const id = parseInt(req.params.id, 10);
@@ -320,6 +367,20 @@ export class UserController {
 
     }
 
+    @httpGet('/getUserRolByidRole/:idRole')
+    public async getUserRolByIdRole(req: Request, res: Response, next: NextFunction) {
+        const idRole = parseInt(req.params.idRole, 10);
 
+        try {
+            const userRol = await this._userRolAplService.getUserRolByidRole(idRole);
+            if (userRol) {
+                res.status(200).json(userRol);
+            } else {
+                res.status(404).json({ message: 'Rol no encontrado' });
+            }
+        } catch (error) {
+            next(error);
+        }
+    }
 
 }

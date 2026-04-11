@@ -8,7 +8,7 @@ export class TrabajoFoto {
   @PrimaryGeneratedColumn()
   public id?: number;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: 'text' })
   public image_path?: string;
 
   // Relación inversa hacia el Trabajo padre

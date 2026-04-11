@@ -3,6 +3,10 @@ coverage
 
 # API keys and secrets
 
+.claude/
+.env.example
+CLAUDE.md
+
 #env variables file 
 *.env
 
