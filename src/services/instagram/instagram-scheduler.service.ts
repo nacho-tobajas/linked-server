@@ -2,13 +2,17 @@ import { inject, injectable } from 'inversify';
 import { InstagramRepository } from '../../repositories/instagram/instagram.dao.js';
 import { InstagramService } from './instagram.service.js';
 
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 // Intervalo de ejecución: cada 2 horas por defecto
 const SYNC_INTERVAL_MS = Number(process.env.INSTAGRAM_SYNC_INTERVAL_MINUTES ?? 120) * 60 * 1000;
 
-// Renovar el token si expira en menos de 30 días.
-// Con un intervalo de 2 horas, esto garantiza que el token nunca expire
-// mientras el servidor esté operativo, haciendo la vinculación efectivamente permanente.
-const REFRESH_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
+// Producción: renovar si expira en menos de 30 días.
+// Desarrollo: renovar si expira en menos de 59 días — el token se renueva en casi
+// cada ejecución del scheduler, sobreviviendo reinicios frecuentes del servidor.
+const REFRESH_THRESHOLD_MS = IS_DEV
+  ? 59 * 24 * 60 * 60 * 1000
+  : 30 * 24 * 60 * 60 * 1000;
 
 @injectable()
 export class InstagramSchedulerService {
@@ -19,7 +23,8 @@ export class InstagramSchedulerService {
   ) {}
 
   start(): void {
-    console.log(`[InstagramScheduler] Iniciado — sync cada ${SYNC_INTERVAL_MS / 60000} min | umbral renovación: 30 días`);
+    const thresholdDays = IS_DEV ? 59 : 30;
+    console.log(`[InstagramScheduler] Iniciado — sync cada ${SYNC_INTERVAL_MS / 60000} min | umbral renovación: ${thresholdDays} días | modo: ${IS_DEV ? 'development' : 'production'}`);
     // Primera ejecución diferida 1 minuto tras el arranque
     setTimeout(() => {
       this.runSync();
@@ -47,13 +52,19 @@ export class InstagramSchedulerService {
       const now = Date.now();
       const expiresAt = token.token_expires_at?.getTime() ?? 0;
 
-      // Token ya expirado: desvincularlo automáticamente (también limpia foto de perfil)
+      // Token ya expirado
       if (expiresAt > 0 && expiresAt <= now) {
-        try {
-          await this.instagramService.disconnectInstagram(tatuadorId);
-          console.warn(`[InstagramScheduler] Token expirado para tatuadorId ${tatuadorId} — cuenta desvinculada`);
-        } catch (err: any) {
-          console.error(`[InstagramScheduler] Error al desvincular tatuadorId ${tatuadorId}:`, err?.message ?? err);
+        if (IS_DEV) {
+          // En desarrollo no se desvincula automáticamente: el servidor no corre
+          // de forma continua y el token puede haber expirado entre reinicios.
+          console.warn(`[InstagramScheduler][DEV] Token expirado para tatuadorId ${tatuadorId} — omitido (re-vinculá manualmente si es necesario)`);
+        } else {
+          try {
+            await this.instagramService.disconnectInstagram(tatuadorId);
+            console.warn(`[InstagramScheduler] Token expirado para tatuadorId ${tatuadorId} — cuenta desvinculada`);
+          } catch (err: any) {
+            console.error(`[InstagramScheduler] Error al desvincular tatuadorId ${tatuadorId}:`, err?.message ?? err);
+          }
         }
         continue;
       }
