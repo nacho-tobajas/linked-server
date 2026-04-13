@@ -33,6 +33,12 @@ export class SupportTicket {
     @Column({ name: 'screenshot', type: 'text', nullable: true })
     public screenshot?: string;
 
+    @Column({ name: 'admin_response', type: 'text', nullable: true })
+    public admin_response?: string | null;
+
+    @Column({ name: 'contact_email', type: 'varchar', length: 254, nullable: true })
+    public contact_email?: string | null;
+
     @CreateDateColumn()
     public creationtimestamp: Date;
 

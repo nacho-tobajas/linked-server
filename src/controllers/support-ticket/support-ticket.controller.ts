@@ -12,6 +12,16 @@ export class SupportTicketController extends BaseHttpController {
     super();
   }
 
+  @httpGet('/me/tickets', authenticateToken)
+  async findMyTickets(req: Request, res: Response, next: NextFunction) {
+    try {
+      const username = req.user?.username;
+      if (!username) { res.status(401).json({ msg: 'No autenticado' }); return; }
+      const tickets = await this.service.findByUser(username);
+      res.json(tickets);
+    } catch (err) { next(err); }
+  }
+
   @httpGet('/findall', authenticateToken, authorizeRol('Administrador', 'Moderador'))
   async findAll(req: Request, res: Response, next: NextFunction) {
     try {
@@ -40,6 +50,23 @@ export class SupportTicketController extends BaseHttpController {
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const ticket = await this.service.update(Number(req.params.id), req.body);
+      res.json(ticket);
+    } catch (err) { next(err); }
+  }
+
+  @httpPost('/:id/respond', authenticateToken, authorizeRol('Administrador', 'Moderador'))
+  async respond(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { status, admin_response, modificationuser } = req.body;
+      if (admin_response === undefined || admin_response === '') {
+        res.status(400).json({ msg: 'La respuesta es obligatoria' });
+        return;
+      }
+      const ticket = await this.service.respond(Number(req.params.id), {
+        status,
+        admin_response,
+        modificationuser,
+      });
       res.json(ticket);
     } catch (err) { next(err); }
   }

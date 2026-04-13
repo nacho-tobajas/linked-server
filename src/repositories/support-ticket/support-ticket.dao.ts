@@ -12,6 +12,13 @@ export class SupportTicketRepository {
     return this.repo.find({ order: { creationtimestamp: 'DESC' } });
   }
 
+  async findByUser(username: string): Promise<SupportTicket[]> {
+    return this.repo.find({
+      where: { creationuser: username },
+      order: { creationtimestamp: 'DESC' },
+    });
+  }
+
   async findOne(id: number): Promise<SupportTicket | null> {
     return this.repo.findOneBy({ id });
   }
